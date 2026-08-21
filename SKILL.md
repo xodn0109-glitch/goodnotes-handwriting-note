@@ -23,6 +23,14 @@ When the user asks for a fill-in review note, first make a separate marked copy 
 - Default to a light, readable amount of recall practice: usually about one tenth to one fifth of the substantive body text, adjusted for concept density and age level. Preserve the source text outside the markers exactly.
 - Do not blank the hierarchy markers `Ⅱ`, `<1>`, `1.`, `1)`, `(1)`, or `a.`. The normal and colon-based hanging-indent rules still apply because hidden text retains its original width.
 
+## 2022 통합사회 성취기준 정렬
+
+For a high-school `통합사회1` or `통합사회2` review note, read [2022 통합사회1·2 성취기준](references/2022-통합사회1_2-성취기준.md) before choosing blanks. Identify the closest subject, area, and achievement standard from the note heading and body text. Then give first priority to compact concepts explicitly named in that achievement standard; this makes each blank a cue for curriculum-level learning rather than merely a missing word.
+
+- Use only the achievement-standard sentences in the reference as the alignment source. Do not treat its omitted explanatory material as a standard.
+- Keep the note readable: a standard-aligned term is still not blanked if it would remove the essential grammar or most of a sentence. Prefer a concise technical term or noun phrase that the student can supply from context.
+- If the note does not map confidently to a single achievement standard, use the ordinary compact-concept blanking rule instead of forcing a match. This reference applies only to the 2022 revised high-school 통합사회1·2 curriculum.
+
 ## Defaults and choices
 
 Use these defaults unless the user specifies otherwise: the sample-derived lined-paper canvas at 2716 by 3492 px / 400 DPI, pure black `학교안심 받아쓰기` L (about 13 pt for body text, with a one-render-pixel black stroke for clear tablet display) and B for headings, roughly 6.6 mm line spacing, and a PDF plus PNG pages. The original TTF files are bundled in the skill and are loaded from relative paths, so the same output works on macOS and Windows without installing a font. The layout has a warm off-white page, a wide unruled title area, a red left margin line, and light gray horizontal rules. Keep the entire unruled top area empty. A leading unstructured title is metadata only and is not printed, but a title beginning with a Roman chapter numeral such as `Ⅱ` is rendered below the blank area as a top-level heading using the same font. Treat `# Heading` and `<1>` as section headings, and `1.` as a subsection heading; preserve numbering such as `1)`, `(1)`, and `a.` as supplied.

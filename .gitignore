@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+assets/reference-lined-paper.png
+assets/Gaegu-*.ttf
+assets/Gaegu-OFL.txt
+assets/NotoSansKR-*.ttf
+assets/NotoSansKR-OFL.txt

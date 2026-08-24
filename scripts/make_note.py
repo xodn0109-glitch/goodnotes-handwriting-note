@@ -168,9 +168,9 @@ def classify_line(raw: str) -> tuple[str, str]:
         return "heading1", stripped
     if re.match(r"^\s*\d+\.\s+.+$", plain):
         return "heading2", stripped
-    bullet = re.match(r"^\s*([-*•])\s+(.+)$", stripped)
+    bullet = re.match(r"^(\s*)([-*•])\s+(.+)$", stripped)
     if bullet:
-        return "bullet", "• " + bullet.group(2)
+        return "bullet", bullet.group(1) + bullet.group(2) + " " + bullet.group(3)
     return "body", stripped
 
 

@@ -19,6 +19,7 @@ MARGIN_LEFT, MARGIN_RIGHT, MARGIN_TOP, MARGIN_BOTTOM = (225 * RENDER_SCALE, 40 *
 MARGIN_LINE_X = 194 * RENDER_SCALE
 RULE_GAP = 44 * RENDER_SCALE  # 5.6 mm at 400 DPI; fixed 10-inch tablet preset
 PAPER, RULE_COLOR, MARGIN_COLOR = "#F8F7E9", "#DEDFDB", "#C64E58"
+BLANK_FILL = "#E8E8E8"
 SLIDE_MODE = False
 SLIDE_HEADER, SLIDE_ACCENT = "#4B3675", "#F4C95D"
 HEADING_HIGHLIGHT = "#FFF1A8"
@@ -151,7 +152,16 @@ def draw_marked_text(draw: ImageDraw.ImageDraw, xy: tuple[int, int], text: str, 
             end += 1
         segment = "".join(char for char, _ in tokens[index:end])
         cursor = x + round(draw.textlength(prefix, font=font))
-        color = PAPER if is_blank else ink
+        if is_blank:
+            box = draw.textbbox((cursor, baseline), segment, font=font, anchor="ls")
+            pad_x = max(2, font.size // 18)
+            pad_y = max(1, font.size // 28)
+            draw.rounded_rectangle(
+                (box[0] - pad_x, box[1] - pad_y, box[2] + pad_x, box[3] + pad_y),
+                radius=max(2, font.size // 18),
+                fill=BLANK_FILL,
+            )
+        color = BLANK_FILL if is_blank else ink
         draw.text((cursor, baseline), segment, font=font, fill=color, stroke_width=stroke_width, stroke_fill=color, anchor="ls")
         prefix += segment
         index = end

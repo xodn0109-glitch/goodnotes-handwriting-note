@@ -16,7 +16,7 @@ Create a polished, import-ready study note from the user's text. By default, use
 
 ## Review-note blanks
 
-When the user asks for a fill-in review note, first make a separate marked copy of the supplied text. Surround each student-completed target with `[[` and `]]`; the renderer preserves its exact width and position but draws only the target in the paper color. Do not add boxes, underlines, or placeholder symbols.
+When the user asks for a fill-in review note, first make a separate marked copy of the supplied text. Surround each student-completed target with `[[` and `]]`; the renderer preserves its exact width and position and adds a pale gray background behind the blank. Do not add outlines, underlines, or placeholder symbols.
 
 - Select only compact, assessable core concepts: technical terms, named classifications, and short indispensable noun phrases. A multiword term may stay together, but do not blank a whole clause or sentence by default.
 - Leave chapter/section numbering, structural labels, verbs, linking words, and enough grammatical context visible for a student to infer what belongs in each blank. Do not blank everything in a paragraph or create trivia blanks.
@@ -38,6 +38,14 @@ For a Korean textbook-capture note, check the applicable curriculum reference be
 - Treat the curriculum reference as the scope check and the textbook heading as the authority for the printed number hierarchy. Do not invent a parent heading solely because the curriculum has a broader unit label.
 - Include a parent marker such as `2.` only when it is part of the supplied lesson scope or is needed to distinguish the note from another lesson. When a capture is a continuation whose actual starting point is `2)`, begin at `2)` and retain that number.
 - Before export, verify that every printed marker follows the fixed order `1.` → `1)` → `(1)` → `a.` → `-`, with no skipped or newly added parent level. Preserve the same lesson numbering across related notes.
+
+## 출력 파일명
+
+Name each exported note `<대단원>-<주제>-<세부노트>_<제목>-<용도>`. Derive the three-part prefix from the curriculum and textbook hierarchy before export, even when the highest parent label is omitted from the printed note.
+
+- Keep the same prefix for the class-display and review versions of one note. For example, use `2-1-1_정의의-의미와-필요성-수업용.pdf` and `2-1-1_정의의-의미와-필요성-복습용.pdf`.
+- Use the next sibling number for a distinct note at the same lesson level. Retain revision labels such as `-수정` after the use label, not before the numerical prefix.
+- Apply the same stem to companion PNG pages. Pass the complete numbered stem through `make_note.py --name`.
 
 
 ## 교과서 캡처 자동 변환

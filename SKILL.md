@@ -31,6 +31,16 @@ For a high-school `통합사회1` or `통합사회2` review note, read [2022 통
 - Keep the note readable: a standard-aligned term is still not blanked if it would remove the essential grammar or most of a sentence. Prefer a concise technical term or noun phrase that the student can supply from context.
 - If the note does not map confidently to a single achievement standard, use the ordinary compact-concept blanking rule instead of forcing a match. This reference applies only to the 2022 revised high-school 통합사회1·2 curriculum.
 
+
+## 교과서 캡처 자동 변환
+
+When the user supplies a legible textbook-page capture in this note-making workflow, automatically turn its learning content into a Goodnotes study note. Do not wait for separate transcription or formatting directions.
+
+- Preserve the chapter headings, concepts, classifications, and factual relationships visible in the capture. Convert explanatory paragraphs into concise note sentences; do not invent facts, examples, or conclusions that are absent from the source.
+- By default, produce two matching PDFs: a student-distribution review note with achievement-standard-aligned blanks, and a class-display note with every answer visible. Use identical hierarchy, line layout, and pagination in both.
+- Apply the existing number hierarchy: `Ⅱ` → `<1>` → `1.` → `1)` → `(1)` → `a.`. Use the existing hanging-indent and colon-continuation rules without asking the user again.
+- Do not add a mind map, textbook image, illustration, or decorative visual unless the user explicitly requests it.
+- Ask for a clearer capture only when a heading, term, number, or factual relationship needed for the note cannot be read reliably. Otherwise proceed and visually verify both PDF versions before delivery.
 ## Defaults and choices
 
 Use these defaults unless the user specifies otherwise: the sample-derived lined-paper canvas at 2716 by 3492 px / 400 DPI, pure black `학교안심 받아쓰기` L (about 13 pt for body text, with a one-render-pixel black stroke for clear tablet display) and B for headings, roughly 6.6 mm line spacing, and a PDF plus PNG pages. The original TTF files are bundled in the skill and are loaded from relative paths, so the same output works on macOS and Windows without installing a font. The layout has a warm off-white page, a wide unruled title area, a red left margin line, and light gray horizontal rules. Keep the entire unruled top area empty. A leading unstructured title is metadata only and is not printed, but a title beginning with a Roman chapter numeral such as `Ⅱ` is rendered below the blank area as a top-level heading using the same font. Treat `# Heading` and `<1>` as section headings, and `1.` as a subsection heading; preserve numbering such as `1)`, `(1)`, and `a.` as supplied.

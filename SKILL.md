@@ -31,25 +31,35 @@ For a high-school `통합사회1` or `통합사회2` review note, read [2022 통
 - Keep the note readable: a standard-aligned term is still not blanked if it would remove the essential grammar or most of a sentence. Prefer a concise technical term or noun phrase that the student can supply from context.
 - If the note does not map confidently to a single achievement standard, use the ordinary compact-concept blanking rule instead of forcing a match. This reference applies only to the 2022 revised high-school 통합사회1·2 curriculum.
 
+## 교육과정·단원 구조 점검
+
+For a Korean textbook-capture note, check the applicable curriculum reference before drafting the hierarchy. Compare its subject and unit labels with the captured textbook headings, then retain the textbook's actual lesson position and visible numbering.
+
+- Treat the curriculum reference as the scope check and the textbook heading as the authority for the printed number hierarchy. Do not invent a parent heading solely because the curriculum has a broader unit label.
+- Include a parent marker such as `2.` only when it is part of the supplied lesson scope or is needed to distinguish the note from another lesson. When a capture is a continuation whose actual starting point is `2)`, begin at `2)` and retain that number.
+- Before export, verify that every printed marker follows the fixed order `1.` → `1)` → `(1)` → `a.` → `-`, with no skipped or newly added parent level. Preserve the same lesson numbering across related notes.
+
 
 ## 교과서 캡처 자동 변환
 
 When the user supplies a legible textbook-page capture in this note-making workflow, automatically turn its learning content into a Goodnotes study note. Do not wait for separate transcription or formatting directions.
 
 - Preserve the chapter headings, concepts, classifications, and factual relationships visible in the capture. Convert explanatory paragraphs into concise note sentences; do not invent facts, examples, or conclusions that are absent from the source.
-- By default, produce two matching PDFs: a student-distribution review note with achievement-standard-aligned blanks, and a class-display note with every answer visible. Use identical hierarchy, line layout, and pagination in both.
+- By default, produce two PDFs: a student-distribution review note with achievement-standard-aligned blanks on 10-inch iPad lined paper, and a class-display note with every answer visible on one 16:9 slide containing two side-by-side note panels. Preserve identical hierarchy and content, but use the two-panel slide layout for the class-display PDF.
 - Render the chapter marker `Ⅱ` above the fixed five-level hierarchy: `1.` → `1)` → `(1)` → `a.` → `-`. Use the existing hanging-indent and colon-continuation rules without asking the user again.
 - For Korean textbook-capture notes, convert explanatory prose into concise noun-ending phrases, prioritizing compact Sino-Korean terminology where natural. Preserve the source's concepts and relationships.
-- Indent each `1)`-level item by one leading space, each `(1)`-level item by two leading spaces, each `a.`-level item by three leading spaces, and each `-`-level item by four leading spaces. Leave one blank ruled line between adjacent major `1)` sections; keep siblings at the same lower level consecutive.
+- In source Markdown, indent each successive hierarchy level by one additional leading space. Render that hierarchy at two blank-space widths per level: `1)` at two spaces, `(1)` at four, `a.` at six, and `-` at eight. When an `a.` item needs a child item, use `-` as that child marker; do not restart a lower numbered or lettered sequence. Leave one blank ruled line between adjacent major `1)` sections; keep siblings at the same lower level consecutive.
 - Do not add a mind map, textbook image, illustration, or decorative visual unless the user explicitly requests it.
 - Ask for a clearer capture only when a heading, term, number, or factual relationship needed for the note cannot be read reliably. Otherwise proceed and visually verify both PDF versions before delivery.
 ## Defaults and choices
 
 Use these defaults unless the user specifies otherwise: the sample-derived lined-paper canvas at 2716 by 3492 px / 400 DPI, pure black `학교안심 받아쓰기` L (about 11.5 pt for body text, with a one-render-pixel black stroke for clear tablet display) and B for headings, roughly 5.6 mm line spacing, and a PDF plus PNG pages. This fixed preset suits a 10-inch iPad; let overflow continue onto the next page rather than shrinking text. The original TTF files are bundled in the skill and are loaded from relative paths, so the same output works on macOS and Windows without installing a font. The layout has a warm off-white page, a wide unruled title area, a red left margin line, and light gray horizontal rules. Keep the entire unruled top area empty. A leading unstructured title is metadata only and is not printed, but a title beginning with a Roman chapter numeral such as `Ⅱ` is rendered below the blank area as a top-level heading using the same font. Treat `# Heading` and `Ⅱ` as top-level headings, and `1.` as the next heading level; preserve numbering such as `1)`, `(1)`, and `a.` as supplied.
 
-For a numbered definition with an explanatory colon, such as `1) 정의의 일반적 의미: 설명`, keep the beginning of the explanation on the same ruled line. When it wraps, align every continuation line with the horizontal start position immediately after the colon. Apply this same hanging-indent rule to `(1)` and `a.` definition labels. Do not change ordinary sentences merely because they contain a colon.
+For a class-display note, invoke `make_note.py` with `--slide --single-slide`. Render one 1920 by 1080 16:9 canvas at 2x resolution, with a persistent title bar and two lined note panels arranged side by side. Flow the note continuously from the left panel to the right panel; preserve the source hierarchy, hanging indents, and blank-line rules. Fit the complete note on that one screen by selecting the largest body type that prevents clipping.
 
-For a numbered item without a colon, such as `1) 긴 설명`, keep the first line as supplied. When it wraps, align each continuation line with the start of the text immediately after `1)`. Apply the same rule to `(1)` and `a.` items.
+For a numbered definition with an explanatory colon, such as `1) 정의의 일반적 의미: 설명`, keep the beginning of the explanation on the same ruled line. When it wraps, align every continuation line with the horizontal start position immediately after the colon. Apply this same hanging-indent rule to `(1)`, `a.`, and `-` definition labels. Do not change ordinary sentences merely because they contain a colon.
+
+For a numbered item without a colon, such as `1) 긴 설명`, keep the first line as supplied. When it wraps, align each continuation line with the start of the text immediately after `1)`. Apply the same rule to `(1)`, `a.`, and `-` items.
 
 Ask only when a missing choice materially affects the result. Otherwise proceed. A user's reference image controls visual style only; never transcribe its text as source content without confirmation.
 
@@ -62,6 +72,9 @@ python3 scripts/make_note.py --input /path/to/source.md --output-dir /path/to/ou
 # Direct short note with grid paper and dark ink.
 python3 scripts/make_note.py --text '세포 호흡\n\n포도당은 ATP를 만드는 에너지원이다.' \
   --paper grid --ink-color '#1D3557' --output-dir /path/to/output --name cell-respiration
+
+# Single 16:9 class-display slide
+python3 scripts/make_note.py --input /path/to/source.md --slide --single-slide --output-dir /path/to/output --name class-display
 ```
 
 ## Style and optional illustrations

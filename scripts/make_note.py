@@ -16,7 +16,7 @@ BASE_PAGE_WIDTH, BASE_PAGE_HEIGHT = 1358, 1746  # User-supplied Goodnotes paper 
 PAGE_WIDTH, PAGE_HEIGHT = BASE_PAGE_WIDTH * RENDER_SCALE, BASE_PAGE_HEIGHT * RENDER_SCALE
 MARGIN_LEFT, MARGIN_RIGHT, MARGIN_TOP, MARGIN_BOTTOM = (225 * RENDER_SCALE, 40 * RENDER_SCALE, 156 * RENDER_SCALE, 42 * RENDER_SCALE)
 MARGIN_LINE_X = 194 * RENDER_SCALE
-RULE_GAP = 52 * RENDER_SCALE  # 6.6 mm at 400 DPI
+RULE_GAP = 44 * RENDER_SCALE  # 5.6 mm at 400 DPI; fixed 10-inch tablet preset
 PAPER, RULE_COLOR, MARGIN_COLOR = "#F8F7E9", "#DEDFDB", "#C64E58"
 HEADING_HIGHLIGHT = "#FFF1A8"
 BLANK_OPEN, BLANK_CLOSE = "[[", "]]"
@@ -276,7 +276,7 @@ def render_pages(text: str, paper: str, font_path: Path, ink: str) -> list[Image
     prototype = paper_page(paper)
     prototype_draw = ImageDraw.Draw(prototype)
     heading_font = heading_font_path(font_path)
-    body, h1, h2 = (load_font(font_path, 73), load_font(heading_font, 90), load_font(heading_font, 84))
+    body, h1, h2 = (load_font(font_path, 64), load_font(heading_font, 85), load_font(heading_font, 78))
     body_stroke_width = 1 if font_path.resolve() == BUNDLED_BADASSEUGI_REGULAR.resolve() else 0
     lines = layout_lines(text, prototype_draw, body, h1, h2)
     pages, index, page_number = [], 0, 1

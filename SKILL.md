@@ -14,6 +14,15 @@ Create a polished, import-ready study note from the user's text. By default, use
 - Before producing a PDF, follow the available PDF skill's create-and-render verification workflow. Inspect every rendered page; revise the layout if text overlaps, clips, or becomes too small.
 - Keep the original source text separate from the exported note. Do not overwrite an existing output without the user's explicit request.
 
+## 교과서 구조 보존 우선
+
+교과서나 교재를 요약노트로 바꿀 때는 짧게 만드는 것보다 원문의 학습 구조를 최대한 유지한다. 단원·소단원 제목, 등장 순서, 번호 체계, 상위·하위 관계를 그대로 옮기고, 요약은 각 항목 안의 설명을 압축하는 방식으로 한다. 서로 다른 절의 내용을 하나로 합치거나, 상위 제목을 새로 만들거나, 원문에 없는 분류를 덧붙여 구조를 재편하지 않는다.
+
+- 원문에 보이는 장·절·소제목과 번호는 생략하지 않는다. 다만 사용자가 특정 범위만 요청했거나, 동일한 제목이 페이지에 반복되어 단순 머리말임이 분명한 경우에는 그 범위와 맥락에 맞춰 최소화할 수 있다.
+- 원문에 번호가 없더라도 제목의 들여쓰기, 글자 크기, 배치, 문단 묶음으로 확인되는 계층은 대응하는 Markdown 계층으로 보존한다. 계층이 불확실하면 더 높은 수준으로 추정해 묶지 말고, 보이는 순서대로 독립 항목으로 둔다.
+- 표, 개념 상자, 비교 항목, 사례는 원래 속한 절 아래에 배치한다. 내용을 문장형으로 압축할 수는 있지만 비교 축·분류·인과 관계와 같은 학습 관계는 유지한다.
+- 최종 렌더링 전에 제목의 순서와 번호, 각 하위 항목의 소속이 원문과 일치하는지 확인한다. 본문을 줄이는 과정에서 제목이나 핵심 분류가 사라졌다면 해당 구조를 복원한 뒤 내보낸다.
+
 ## Review-note blanks
 
 When the user asks for a fill-in review note, first make a separate marked copy of the supplied text. Surround each student-completed target with `[[` and `]]`; the renderer preserves its exact width and position and adds a pale gray background behind the blank. Do not add outlines, underlines, or placeholder symbols.

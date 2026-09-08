@@ -14,14 +14,15 @@ Create a polished, import-ready study note from the user's text. By default, use
 - Before producing a PDF, follow the available PDF skill's create-and-render verification workflow. Inspect every rendered page; revise the layout if text overlaps, clips, or becomes too small.
 - Keep the original source text separate from the exported note. Do not overwrite an existing output without the user's explicit request.
 
-## 교과서 구조 보존 우선
+## 교과서 내용 기반 재구성
 
-교과서나 교재를 요약노트로 바꿀 때는 짧게 만드는 것보다 원문의 학습 구조를 최대한 유지한다. 단원·소단원 제목, 등장 순서, 번호 체계, 상위·하위 관계를 그대로 옮기고, 요약은 각 항목 안의 설명을 압축하는 방식으로 한다. 서로 다른 절의 내용을 하나로 합치거나, 상위 제목을 새로 만들거나, 원문에 없는 분류를 덧붙여 구조를 재편하지 않는다.
+교과서나 교재는 개념·사례·인과 관계의 출처로 사용하되, 필기노트의 학습 구조는 새로 설계한다. 교과서의 페이지 배치, 문단 순서, 소제목·번호를 그대로 복제하지 않는다. 학습자가 핵심 개념을 이해하고 비교·적용할 수 있도록 개념 → 비교 기준 → 사상가·사례 → 적용의 흐름을 우선한다.
 
-- 원문에 보이는 장·절·소제목과 번호는 생략하지 않는다. 다만 사용자가 특정 범위만 요청했거나, 동일한 제목이 페이지에 반복되어 단순 머리말임이 분명한 경우에는 그 범위와 맥락에 맞춰 최소화할 수 있다.
-- 원문에 번호가 없더라도 제목의 들여쓰기, 글자 크기, 배치, 문단 묶음으로 확인되는 계층은 대응하는 Markdown 계층으로 보존한다. 계층이 불확실하면 더 높은 수준으로 추정해 묶지 말고, 보이는 순서대로 독립 항목으로 둔다.
-- 표, 개념 상자, 비교 항목, 사례는 원래 속한 절 아래에 배치한다. 내용을 문장형으로 압축할 수는 있지만 비교 축·분류·인과 관계와 같은 학습 관계는 유지한다.
-- 최종 렌더링 전에 제목의 순서와 번호, 각 하위 항목의 소속이 원문과 일치하는지 확인한다. 본문을 줄이는 과정에서 제목이나 핵심 분류가 사라졌다면 해당 구조를 복원한 뒤 내보낸다.
+- 교과서에서 확인된 사실, 개념, 분류, 비교 축, 인과 관계는 정확히 보존한다. 서로 다른 본문·자료 상자·토론 자료의 핵심 내용은 하나의 학습 흐름 안에 통합할 수 있다.
+- 교과서의 소제목·번호는 범위 확인과 파일명·단원 식별에 활용하되, 출력 노트의 제목·순서·상위 관계를 결정하는 절대 기준으로 삼지 않는다.
+- 출력 노트는 고정 번호 체계 `1.` → `1)` → `(1)` → `a.` → `-`를 유지한다. 항목은 내용의 중요도와 학습 관계에 맞춰 배치하며, 필요한 경우 새로운 상위·하위 항목을 구성할 수 있다.
+- 별도 자료, 표, 개념 상자, 비교 항목, 토론 자료도 학습 목표에 직접 연결되면 본문 항목에 포함한다. 단, 교과서에 없는 사실·사례·결론은 추가하지 않는다.
+- 최종 점검에서는 교과서의 정보 누락·왜곡 여부와 노트의 번호 체계·학습 흐름을 확인한다. 제목의 순서가 교과서와 같은지 여부는 검수 기준이 아니다.
 
 ## Review-note blanks
 
@@ -40,13 +41,13 @@ For a high-school `통합사회1` or `통합사회2` review note, read [2022 통
 - Keep the note readable: a standard-aligned term is still not blanked if it would remove the essential grammar or most of a sentence. Prefer a concise technical term or noun phrase that the student can supply from context.
 - If the note does not map confidently to a single achievement standard, use the ordinary compact-concept blanking rule instead of forcing a match. This reference applies only to the 2022 revised high-school 통합사회1·2 curriculum.
 
-## 교육과정·단원 구조 점검
+## 교육과정·번호 체계 점검
 
-For a Korean textbook-capture note, check the applicable curriculum reference before drafting the hierarchy. Compare its subject and unit labels with the captured textbook headings, then retain the textbook's actual lesson position and visible numbering.
+For a Korean textbook-capture note, check the applicable curriculum reference before drafting. Use its subject and unit labels with the captured textbook scope to identify the lesson position and output-file prefix, then design the printed note hierarchy around the learning flow.
 
-- Treat the curriculum reference as the scope check and the textbook heading as the authority for the printed number hierarchy. Do not invent a parent heading solely because the curriculum has a broader unit label.
-- Include a parent marker such as `2.` only when it is part of the supplied lesson scope or is needed to distinguish the note from another lesson. When a capture is a continuation whose actual starting point is `2)`, begin at `2)` and retain that number.
-- Before export, verify that every printed marker follows the fixed order `1.` → `1)` → `(1)` → `a.` → `-`, with no skipped or newly added parent level. Preserve the same lesson numbering across related notes.
+- Treat the curriculum reference as the scope check and the textbook heading as a topic-identification source. Do not treat either source as the authority for the printed note hierarchy.
+- Include a parent marker such as `2.` only when it is useful for the requested note scope or needed to distinguish the note from another lesson. A continuation may begin at `2)` when that is the clearest way to preserve the existing note sequence.
+- Before export, verify that every printed marker follows the fixed order `1.` → `1)` → `(1)` → `a.` → `-`, with no skipped level. Preserve the same note numbering across related notes, even when the source pages use different visual numbering.
 
 ## 출력 파일명
 
@@ -61,7 +62,7 @@ Name each exported note `<대단원>-<주제>-<세부노트>_<제목>-<용도>`.
 
 When the user supplies a legible textbook-page capture in this note-making workflow, automatically turn its learning content into a Goodnotes study note. Do not wait for separate transcription or formatting directions.
 
-- Preserve the chapter headings, concepts, classifications, and factual relationships visible in the capture. Convert explanatory paragraphs into concise note sentences; do not invent facts, examples, or conclusions that are absent from the source.
+- Extract concepts, classifications, factual relationships, and relevant supporting materials visible in the capture. Reorganize them into a concise learning sequence rather than copying the printed page structure; do not invent facts, examples, or conclusions that are absent from the source.
 - By default, produce two PDFs: a student-distribution review note with achievement-standard-aligned blanks on 10-inch iPad lined paper, and a class-display note with every answer visible on one 16:9 slide containing two side-by-side note panels. Preserve identical hierarchy and content, but use the two-panel slide layout for the class-display PDF.
 - Render the chapter marker `Ⅱ` above the fixed five-level hierarchy: `1.` → `1)` → `(1)` → `a.` → `-`. Use the existing hanging-indent and colon-continuation rules without asking the user again.
 - For Korean textbook-capture notes, convert explanatory prose into concise noun-ending phrases, prioritizing compact Sino-Korean terminology where natural. Preserve the source's concepts and relationships.

@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -92,7 +92,10 @@ class NoteRenderingTests(unittest.TestCase):
             note.draw_marked_text(self.draw, (10, 100), "A[[V]]", self.font, "black", 0)
         expected = 10 + round(self.draw.textlength("AV", font=self.font) - self.draw.textlength("V", font=self.font))
         self.assertEqual(draw_text.call_args_list[1].args[0][0], expected)
-        self.assertNotEqual(expected, 10 + round(self.draw.textlength("A", font=self.font)))
+        # Pillow's Windows wheel may use BASIC without RAQM kerning. Both
+        # engines must follow their actual metrics; only RAQM shifts this pair.
+        if self.font.layout_engine == ImageFont.Layout.RAQM:
+            self.assertNotEqual(expected, 10 + round(self.draw.textlength("A", font=self.font)))
 
     def test_hanging_prefix_does_not_leave_less_than_a_character(self):
         prefix, detail = "1) 매우 긴 이름: ", "가나다라마바사"

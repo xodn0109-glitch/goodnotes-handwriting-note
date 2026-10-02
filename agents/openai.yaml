@@ -1,4 +1,4 @@
 interface:
   display_name: "굿노트 필기노트"
-  short_description: "텍스트를 굿노트용 손글씨 노트로 만듭니다"
-  default_prompt: "Use $goodnotes-handwriting-note to turn this text into a Goodnotes-ready handwritten study note: ..."
+  short_description: "텍스트와 교과서 캡처를 굿노트용 손글씨 필기노트로 만듭니다"
+  default_prompt: "Use $goodnotes-handwriting-note to turn this text or textbook-page capture into a Goodnotes-ready study note."

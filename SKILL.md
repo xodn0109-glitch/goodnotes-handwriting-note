@@ -1,104 +1,88 @@
 ---
 name: goodnotes-handwriting-note
-description: Turn supplied text into a legible, Goodnotes-ready handwritten study note on lined, grid, or blank paper. Use for notes to import into Goodnotes; not for editable word-processing documents.
+description: Create Goodnotes-ready handwriting-style study notes from supplied text or textbook-page captures, with PDF/PNG exports and optional review blanks. Use for note-making, not editable word-processing documents.
 ---
 
 # Goodnotes Handwriting Note
 
-Create a polished, import-ready study note from the user's text. By default, use the sample-derived lined-paper layout, with legible ‘学校安心 받아쓰기’ handwriting typography and PDF plus PNG exports.
+Use `scripts/make_note.py` to render Korean text deterministically with bundled `학교안심 받아쓰기` fonts. The outputs are raster PDF pages and companion PNGs for import into Goodnotes, not editable text or native pen strokes. Do not use image generation to render Korean body text.
 
-## Required approach
+## Choose the source mode
 
-- Preserve the supplied text verbatim apart from Markdown markers used only to establish hierarchy. Do not delegate Korean body text to image generation: it can introduce spelling errors.
-- Use `scripts/make_note.py` for deterministic paper, typography, pagination, and exports. It accepts `--text` or `--input`; prefer `--input` for long text.
-- Before producing a PDF, follow the available PDF skill's create-and-render verification workflow. Inspect every rendered page; revise the layout if text overlaps, clips, or becomes too small.
-- Keep the original source text separate from the exported note. Do not overwrite an existing output without the user's explicit request.
+- **Supplied note text:** Preserve its wording and sequence. Markdown heading markers may establish hierarchy; do not silently summarize or impose the textbook numbering scheme on ordinary text.
+- **Textbook content:** When a legible textbook-page capture is supplied in this note-making workflow, proceed without requiring separate transcription directions. Use the reconstruction rules below. An explicit request for verbatim transcription takes precedence.
+- **Style reference:** Use a handwriting or paper sample only for visual style. Do not copy its words into the note unless the user also identifies it as content. A textbook content capture is not merely a style reference.
 
-## 교과서 내용 기반 재구성
+Keep the source and the working note draft separate. Resolve unreadable essential headings, terms, numbers, or factual relationships before using them; request a clearer capture only when that uncertainty prevents a faithful note. Preserve the user's requested scope, format, and destination.
 
-교과서나 교재는 개념·사례·인과 관계의 출처로 사용하되, 필기노트의 학습 구조는 새로 설계한다. 교과서의 페이지 배치, 문단 순서, 소제목·번호를 그대로 복제하지 않는다. 학습자가 핵심 개념을 이해하고 비교·적용할 수 있도록 개념 → 비교 기준 → 사상가·사례 → 적용의 흐름을 우선한다.
+## Reconstruct textbook content
 
-- 교과서에서 확인된 사실, 개념, 분류, 비교 축, 인과 관계는 정확히 보존한다. 서로 다른 본문·자료 상자·토론 자료의 핵심 내용은 하나의 학습 흐름 안에 통합할 수 있다.
-- 교과서의 소제목·번호는 범위 확인과 파일명·단원 식별에 활용하되, 출력 노트의 제목·순서·상위 관계를 결정하는 절대 기준으로 삼지 않는다.
-- 출력 노트는 고정 번호 체계 `1.` → `1)` → `(1)` → `a.` → `-`를 유지한다. 항목은 내용의 중요도와 학습 관계에 맞춰 배치하며, 필요한 경우 새로운 상위·하위 항목을 구성할 수 있다.
-- 별도 자료, 표, 개념 상자, 비교 항목, 토론 자료도 학습 목표에 직접 연결되면 본문 항목에 포함한다. 단, 교과서에 없는 사실·사례·결론은 추가하지 않는다.
-- 최종 점검에서는 교과서의 정보 누락·왜곡 여부와 노트의 번호 체계·학습 흐름을 확인한다. 제목의 순서가 교과서와 같은지 여부는 검수 기준이 아니다.
+교과서나 교재는 개념·사례·인과 관계의 출처로 사용하되, 필기노트의 학습 구조는 새로 설계한다. 개념 → 비교 기준 → 사상가·사례 → 적용의 흐름은 해당 내용이 있을 때 활용한다. 교과서의 페이지 배치, 문단 순서, 소제목·번호를 그대로 복제할 필요는 없다.
 
-## Review-note blanks
+- 사실, 개념, 분류, 비교 축, 인과 관계를 정확히 보존한다. 학습 목표에 직접 연결되는 본문·자료 상자·표·토론 자료는 하나의 흐름에 통합할 수 있다. 원문에 없는 사실·사례·결론을 추가하지 않는다.
+- 설명문은 뜻이 유지되는 간결한 명사형으로 정리하고, 자연스러운 범위에서 한자어 개념 용어를 활용한다. 핵심 정보의 누락·왜곡 여부를 원문과 대조한다.
+- 번호 체계는 `1.` → `1)` → `(1)` → `a.` → `-`로 구성한다. 내용의 학습 관계에 맞춰 상하위 항목을 설계하며, 포함한 부모와 자식 사이의 단계를 건너뛰지 않는다. 연속 노트의 첫 항목은 기존 순서에 따라 `2)`처럼 시작할 수 있으며, 생략된 상위 항목을 임의로 만들지 않는다.
+- 대단원 표시는 원문에서 확인되는 경우에만 사용한다. `Ⅱ`는 2단원의 예시이며, 모든 노트에 붙이는 고정 표지가 아니다. 관련 노트와 수업용·복습용 사이의 번호는 일치시킨다.
+- Markdown에서 각 하위 단계에 선행 공백을 하나씩 추가한다. 렌더러는 이를 단계당 두 칸으로 표시한다(`1)` 두 칸, `(1)` 네 칸, `a.` 여섯 칸, `-` 여덟 칸). `a.`의 자식은 `-`를 쓴다. 주요 `1)` 항목 사이에는 빈 줄 하나를 두고, 같은 하위 단계의 형제 항목은 연속 배치한다.
 
-When the user asks for a fill-in review note, first make a separate marked copy of the supplied text. Surround each student-completed target with `[[` and `]]`; the renderer preserves its exact width and position and adds a pale gray background behind the blank. Do not add outlines, underlines, or placeholder symbols.
+By default, a textbook capture produces two versions from **one complete note draft**: a student review PDF on the iPad lined-paper preset, and a class-display PDF with all answers visible on one 16:9 slide with two side-by-side note panels. Make a separate copy of that draft for blank markers; remove only the markers to recover the complete draft. Preserve identical words, hierarchy, and order across the versions. Do not add mind maps, textbook images, illustrations, or decoration unless requested.
 
-- Select only compact, assessable core concepts: technical terms, named classifications, and short indispensable noun phrases. A multiword term may stay together, but do not blank a whole clause or sentence by default.
-- Leave chapter/section numbering, structural labels, verbs, linking words, and enough grammatical context visible for a student to infer what belongs in each blank. Do not blank everything in a paragraph or create trivia blanks.
-- Default to a light, readable amount of recall practice: usually about one tenth to one fifth of the substantive body text, adjusted for concept density and age level. Preserve the source text outside the markers exactly.
-- Do not blank the chapter marker `Ⅱ` or the hierarchy markers `1.`, `1)`, `(1)`, `a.`, and `-`. The normal and colon-based hanging-indent rules still apply because hidden text retains its original width.
+## Review blanks and curriculum alignment
 
-## 2022 통합사회 성취기준 정렬
+Use `[[target]]` in the review copy to hide a short, assessable concept while retaining its layout width and adding a pale gray background. Do not add underlines, outlines, or placeholder symbols. Preserve all text outside the markers.
 
-For a high-school `통합사회1` or `통합사회2` review note, read [2022 통합사회1·2 성취기준](references/2022-통합사회1_2-성취기준.md) before choosing blanks. Identify the closest subject, area, and achievement standard from the note heading and body text. Then give first priority to compact concepts explicitly named in that achievement standard; this makes each blank a cue for curriculum-level learning rather than merely a missing word.
+- Prefer technical terms, named classifications, and indispensable short noun phrases. Leave numbering, structural labels, verbs, linking words, and enough context to infer the answer visible.
+- Keep recall practice light: usually about 10–20% of substantive body text, adjusted for concept density and age. Do not hide whole clauses or sentences by default.
+- For confirmed **2022 revised high-school 통합사회1·2** content, read [the achievement-standard reference](references/2022-통합사회1_2-성취기준.md). Match subject, area, and standard using the supplied scope and content; prioritize concise concepts named in the relevant standard that already occur in the draft. The reference contains standard sentences only, not their explanations.
+- Do not infer the subject from a generic topic alone. For other subjects, another curriculum, or an uncertain match, use ordinary compact-concept blanks. Use an applicable user-supplied curriculum reference when available; do not invent standards or import 통합사회 labels into another subject.
 
-- Use only the achievement-standard sentences in the reference as the alignment source. Do not treat its omitted explanatory material as a standard.
-- Keep the note readable: a standard-aligned term is still not blanked if it would remove the essential grammar or most of a sentence. Prefer a concise technical term or noun phrase that the student can supply from context.
-- If the note does not map confidently to a single achievement standard, use the ordinary compact-concept blanking rule instead of forcing a match. This reference applies only to the 2022 revised high-school 통합사회1·2 curriculum.
+## Titles and filenames
 
-## 교육과정·번호 체계 점검
+For textbook notes with a known hierarchy, use `<대단원>-<주제>-<세부노트>_<제목>-<용도>`, for example `2-1-1_정의의-의미와-필요성-수업용` and `2-1-1_정의의-의미와-필요성-복습용`. Derive numbers from the supplied textbook scope and established note sequence. Curriculum areas help check scope but do not establish a publisher's lesson numbering. When the hierarchy is unknown or inapplicable, use a descriptive stem without invented numbers. Honor a requested filename.
 
-For a Korean textbook-capture note, check the applicable curriculum reference before drafting. Use its subject and unit labels with the captured textbook scope to identify the lesson position and output-file prefix, then design the printed note hierarchy around the learning flow.
+Pass the full stem with `--name`; PNG pages share that stem. Place revision labels after the use label. Keep existing outputs unless replacement is authorized; use a new stem for a new version or `--overwrite` for an authorized replacement. Overwriting replaces that export set and removes obsolete numbered PNG pages; with `--pdf-only`, it removes that stem's old companion PNGs as well.
 
-- Treat the curriculum reference as the scope check and the textbook heading as a topic-identification source. Do not treat either source as the authority for the printed note hierarchy.
-- Include a parent marker such as `2.` only when it is useful for the requested note scope or needed to distinguish the note from another lesson. A continuation may begin at `2)` when that is the clearest way to preserve the existing note sequence.
-- Before export, verify that every printed marker follows the fixed order `1.` → `1)` → `(1)` → `a.` → `-`, with no skipped level. Preserve the same note numbering across related notes, even when the source pages use different visual numbering.
+The renderer preserves the first body line by default. Use `--title` for metadata and the slide title bar; it does not remove source text. Only use `--first-line-title` when the first nonempty line is intentionally a metadata title that should not appear in the note body. To print a title on the paper, use a Markdown heading such as `# Heading` or a Unicode Roman chapter heading such as `Ⅲ 물과 지형`; ASCII `III` needs `# III …` for heading styling. Extremely long slide titles are shortened with an ellipsis in the header with a warning; the full title remains in PDF metadata.
 
-## 출력 파일명
+## Layout and rendering
 
-Name each exported note `<대단원>-<주제>-<세부노트>_<제목>-<용도>`. Derive the three-part prefix from the curriculum and textbook hierarchy before export, even when the highest parent label is omitted from the printed note.
+The default paper is 2716 × 3492 px at 400 DPI, sized for a 10-inch iPad, with warm off-white paper, a red margin, light gray rules at roughly 5.6 mm spacing, and an empty unruled top area. Body text is pure black `학교안심 받아쓰기` L at about 11.5 pt with a one-render-pixel stroke; headings use B. Fonts load relative to the skill directory and need no system installation. Let paper notes overflow to another page instead of shrinking text. `--paper grid` and `--paper plain` provide alternatives.
 
-- Keep the same prefix for the class-display and review versions of one note. For example, use `2-1-1_정의의-의미와-필요성-수업용.pdf` and `2-1-1_정의의-의미와-필요성-복습용.pdf`.
-- Use the next sibling number for a distinct note at the same lesson level. Retain revision labels such as `-수정` after the use label, not before the numerical prefix.
-- Apply the same stem to companion PNG pages. Pass the complete numbered stem through `make_note.py --name`.
+Class-display notes use `--slide --single-slide`: a 1920 × 1080 canvas rendered at 2× resolution, with a persistent title bar and two lined panels. Content flows left to right at the largest supported size that fits. `--single-slide` requires `--slide`. If the content exceeds supported readable sizes, preserve the complete draft and report the fit limitation; offer `--slide` for multiple slides or a user-directed scope reduction. Do not silently delete content or shrink below the supported minimum.
 
+For numbered definitions with a colon, keep the start of the explanation on the same line and align wrapped lines immediately after the colon. For numbered items without a colon, align wrapped lines after the marker. These hanging indents apply to `1)`, `(1)`, `a.`, and `-`; an ordinary sentence containing a colon is not automatically a definition.
 
-## 교과서 캡처 자동 변환
+## Runtime and commands
 
-When the user supplies a legible textbook-page capture in this note-making workflow, automatically turn its learning content into a Goodnotes study note. Do not wait for separate transcription or formatting directions.
-
-- Extract concepts, classifications, factual relationships, and relevant supporting materials visible in the capture. Reorganize them into a concise learning sequence rather than copying the printed page structure; do not invent facts, examples, or conclusions that are absent from the source.
-- By default, produce two PDFs: a student-distribution review note with achievement-standard-aligned blanks on 10-inch iPad lined paper, and a class-display note with every answer visible on one 16:9 slide containing two side-by-side note panels. Preserve identical hierarchy and content, but use the two-panel slide layout for the class-display PDF.
-- Render the chapter marker `Ⅱ` above the fixed five-level hierarchy: `1.` → `1)` → `(1)` → `a.` → `-`. Use the existing hanging-indent and colon-continuation rules without asking the user again.
-- For Korean textbook-capture notes, convert explanatory prose into concise noun-ending phrases, prioritizing compact Sino-Korean terminology where natural. Preserve the source's concepts and relationships.
-- In source Markdown, indent each successive hierarchy level by one additional leading space. Render that hierarchy at two blank-space widths per level: `1)` at two spaces, `(1)` at four, `a.` at six, and `-` at eight. When an `a.` item needs a child item, use `-` as that child marker; do not restart a lower numbered or lettered sequence. Leave one blank ruled line between adjacent major `1)` sections; keep siblings at the same lower level consecutive.
-- Do not add a mind map, textbook image, illustration, or decorative visual unless the user explicitly requests it.
-- Ask for a clearer capture only when a heading, term, number, or factual relationship needed for the note cannot be read reliably. Otherwise proceed and visually verify both PDF versions before delivery.
-## Defaults and choices
-
-Use these defaults unless the user specifies otherwise: the sample-derived lined-paper canvas at 2716 by 3492 px / 400 DPI, pure black `학교안심 받아쓰기` L (about 11.5 pt for body text, with a one-render-pixel black stroke for clear tablet display) and B for headings, roughly 5.6 mm line spacing, and a PDF plus PNG pages. This fixed preset suits a 10-inch iPad; let overflow continue onto the next page rather than shrinking text. The original TTF files are bundled in the skill and are loaded from relative paths, so the same output works on macOS and Windows without installing a font. The layout has a warm off-white page, a wide unruled title area, a red left margin line, and light gray horizontal rules. Keep the entire unruled top area empty. A leading unstructured title is metadata only and is not printed, but a title beginning with a Roman chapter numeral such as `Ⅱ` is rendered below the blank area as a top-level heading using the same font. Treat `# Heading` and `Ⅱ` as top-level headings, and `1.` as the next heading level; preserve numbering such as `1)`, `(1)`, and `a.` as supplied.
-
-For a class-display note, invoke `make_note.py` with `--slide --single-slide`. Render one 1920 by 1080 16:9 canvas at 2x resolution, with a persistent title bar and two lined note panels arranged side by side. Flow the note continuously from the left panel to the right panel; preserve the source hierarchy, hanging indents, and blank-line rules. Fit the complete note on that one screen by selecting the largest body type that prevents clipping.
-
-For a numbered definition with an explanatory colon, such as `1) 정의의 일반적 의미: 설명`, keep the beginning of the explanation on the same ruled line. When it wraps, align every continuation line with the horizontal start position immediately after the colon. Apply this same hanging-indent rule to `(1)`, `a.`, and `-` definition labels. Do not change ordinary sentences merely because they contain a colon.
-
-For a numbered item without a colon, such as `1) 긴 설명`, keep the first line as supplied. When it wraps, align each continuation line with the start of the text immediately after `1)`. Apply the same rule to `(1)`, `a.`, and `-` items.
-
-Ask only when a missing choice materially affects the result. Otherwise proceed. A user's reference image controls visual style only; never transcribe its text as source content without confirmation.
-
-Useful variations:
+Requires Python 3.10+ and Pillow; dependencies are listed in `requirements.txt`. Run from the skill directory, or use absolute paths to the script and requirements file. Prefer `--input` with a UTF-8 file for substantial notes.
 
 ```bash
-# Text in a file; creates biology-review.pdf and biology-review-page-01.png, etc.
-python3 scripts/make_note.py --input /path/to/source.md --output-dir /path/to/output --name biology-review
+# macOS/Linux: create an isolated runtime in the skill directory.
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
 
-# Direct short note with grid paper and dark ink.
-python3 scripts/make_note.py --text '세포 호흡\n\n포도당은 ATP를 만드는 에너지원이다.' \
-  --paper grid --ink-color '#1D3557' --output-dir /path/to/output --name cell-respiration
+# Render a supplied note; its first body line remains visible.
+.venv/bin/python scripts/make_note.py --input /path/to/source.md \
+  --output-dir /path/to/output --name biology-review
 
-# Single 16:9 class-display slide
-python3 scripts/make_note.py --input /path/to/source.md --slide --single-slide --output-dir /path/to/output --name class-display
+# Direct text uses actual newlines, not literal backslash-n sequences.
+.venv/bin/python scripts/make_note.py --text '# 세포 호흡
+
+포도당은 ATP를 만드는 에너지원이다.' \
+  --paper grid --output-dir /path/to/output --name cell-respiration
+
+# Render the complete draft as one class-display slide.
+.venv/bin/python scripts/make_note.py --input /path/to/complete-note.md \
+  --title '수업용 필기노트' --slide --single-slide \
+  --output-dir /path/to/output --name class-display
 ```
 
-## Style and optional illustrations
+On Windows, create the environment with `py -3 -m venv .venv` and use `.venv\Scripts\python.exe` in place of `.venv/bin/python`. Use `--input` to avoid shell-specific multiline quoting. `--pdf-only` omits companion PNGs when requested.
 
-For a user's own handwriting sample, use it only as a visual reference and obtain an appropriate installed font or a user-supplied font file; preserve exact body text through `make_note.py`.
+## Verify and deliver
 
-If the user explicitly wants a decorative diagram, sticker, or illustration, use the `imagegen` skill to create that raster asset. Inspect it, then place it in a reserved area without covering text. Do not add decoration by default.
+Use the available PDF skill's render-and-inspect workflow. If that skill is unavailable, render the saved PDF with an available PDF viewer or converter such as `pdftoppm` and inspect every page. Companion PNGs help inspect the layout, but do not by themselves verify the saved PDF. If PDF rendering is unavailable, report that verification limit rather than claiming full visual QA.
 
-Report the final PDF and PNG paths, paper/style choices, and any text that had to remain unrendered because the chosen font did not support it.
+Check source fidelity, version parity, readable blanks, glyph support, hanging indents, margins, clipping, page breaks, and the complete two-panel slide. Fix layout failures before delivery; do not substitute or omit unsupported characters silently. Keep any unresolved text issue explicit.
+
+Report the PDF and PNG paths, paper/style choices, and any remaining verification or rendering limitation. For requested handwriting styles, use an appropriate font or a supplied font file. For explicitly requested decorative raster assets, use an available image-generation tool, inspect the asset, and keep it clear of text; decoration is outside the renderer's built-in layout.

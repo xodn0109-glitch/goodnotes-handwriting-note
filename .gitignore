@@ -1,5 +1,7 @@
 __pycache__/
 *.py[cod]
+.venv/
+.DS_Store
 assets/reference-lined-paper.png
 assets/Gaegu-*.ttf
 assets/Gaegu-OFL.txt

@@ -6,7 +6,7 @@ from __future__ import annotations
 import argparse
 import re
 import sys
-from math import ceil
+import tempfile
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -33,8 +33,6 @@ DEFAULT_FONT_CANDIDATES = (
     str(BUNDLED_BADASSEUGI_REGULAR),
     str(BUNDLED_GAEGU_REGULAR),
     str(BUNDLED_NOTO_SANS_KR),
-    "/System/Library/AssetsV2/com_apple_MobileAsset_Font8/1fb44cf128344a11e654a43ccd7a45a68026bf5d.asset/AssetData/NanumScript.ttc",
-    "/System/Library/Fonts/Supplemental/AppleGothic.ttf",
 )
 
 
@@ -46,17 +44,23 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--name", default="handwriting-note", help="Output filename stem.")
     parser.add_argument("--title", help="Optional document metadata; the top page area remains blank.")
+    parser.add_argument("--first-line-title", action="store_true", help="Use the first nonempty input line as metadata instead of printing it.")
     parser.add_argument("--paper", choices=("sample", "ruled", "grid", "plain"), default="sample")
     parser.add_argument("--ink-color", default="#000000")
     parser.add_argument("--font", type=Path, help="TTF/TTC/OTF font file; defaults to bundled Hakgyoansim Badasseugi.")
     parser.add_argument("--slide", action="store_true", help="Render 16:9 class-display slides instead of Goodnotes paper.")
     parser.add_argument("--single-slide", action="store_true", help="Fit class-display content into one divided 16:9 slide.")
     parser.add_argument("--pdf-only", action="store_true", help="Skip individual PNG exports.")
-    return parser.parse_args()
+    parser.add_argument("--overwrite", action="store_true", help="Replace existing exports with this exact filename stem.")
+    args = parser.parse_args()
+    if args.single_slide and not args.slide:
+        parser.error("--single-slide requires --slide")
+    return args
 
 
 def find_font(requested: Path | None) -> Path:
     if requested:
+        requested = requested.expanduser()
         if not requested.is_file():
             raise FileNotFoundError(f"Font not found: {requested}")
         return requested
@@ -94,21 +98,25 @@ def heading_font_path(body_font_path: Path) -> Path:
 
 
 def blank_tokens(text: str) -> list[tuple[str, bool]]:
-    """Return text characters paired with whether they should match the paper color."""
+    """Parse balanced, nonnested review markers without discarding source characters."""
     tokens: list[tuple[str, bool]] = []
-    cursor = 0
+    cursor, in_blank = 0, False
     while cursor < len(text):
         if text.startswith(BLANK_OPEN, cursor):
-            end = text.find(BLANK_CLOSE, cursor + len(BLANK_OPEN))
-            if end == -1:
-                raise ValueError("Unclosed blank marker '[['.")
-            tokens.extend((char, True) for char in text[cursor + len(BLANK_OPEN):end])
-            cursor = end + len(BLANK_CLOSE)
+            if in_blank:
+                raise ValueError("Nested blank markers '[[' are not supported.")
+            in_blank = True
+            cursor += len(BLANK_OPEN)
         elif text.startswith(BLANK_CLOSE, cursor):
-            raise ValueError("Closing blank marker ']]' has no matching '[['.")
+            if not in_blank:
+                raise ValueError("Closing blank marker ']]' has no matching '[['.")
+            in_blank = False
+            cursor += len(BLANK_CLOSE)
         else:
-            tokens.append((text[cursor], False))
+            tokens.append((text[cursor], in_blank))
             cursor += 1
+    if in_blank:
+        raise ValueError("Unclosed blank marker '[['.")
     return tokens
 
 
@@ -151,7 +159,8 @@ def draw_marked_text(draw: ImageDraw.ImageDraw, xy: tuple[int, int], text: str, 
         while end < len(tokens) and tokens[end][1] == is_blank:
             end += 1
         segment = "".join(char for char, _ in tokens[index:end])
-        cursor = x + round(draw.textlength(prefix, font=font))
+        # Include kerning at the run boundary, e.g. the V in A[[V]].
+        cursor = x + round(draw.textlength(prefix + segment, font=font) - draw.textlength(segment, font=font))
         if is_blank:
             box = draw.textbbox((cursor, baseline), segment, font=font, anchor="ls")
             pad_x = max(2, font.size // 18)
@@ -238,13 +247,19 @@ def definition_prefix_and_detail(kind: str, content: str) -> tuple[str, str] | N
     match = re.match(r"^(?P<indent>[\s\u00a0]*)(?P<label>(?:\d+\)|\(\d+\)|[A-Za-z]\.|-)\s+[^:]+:)(?P<separator>[\s\u00a0]*)(?P<detail>.+)$", content)
     if not match:
         return None
-    return match.group("indent") + match.group("label") + match.group("separator"), match.group("detail")
+    prefix = match.group("indent") + match.group("label") + match.group("separator")
+    # A colon inside [[...]] belongs to the hidden concept, not its label.
+    # Falling back to the ordinary numbered layout keeps the marker intact.
+    if prefix.count(BLANK_OPEN) != prefix.count(BLANK_CLOSE):
+        return None
+    return prefix, match.group("detail")
 
 
 def split_hanging_to_width(draw: ImageDraw.ImageDraw, prefix: str, detail: str, used_font: ImageFont.FreeTypeFont, max_width: int) -> list[tuple[str, int]]:
     """Wrap detail text under the horizontal position where its prefix ends."""
     hanging_indent = round(draw.textlength(visible_text(prefix), font=used_font))
-    if hanging_indent >= max_width:
+    widest_character = max((draw.textbbox((0, 0), char, font=used_font)[2] for char, _ in blank_tokens(detail)), default=0)
+    if hanging_indent + widest_character > max_width:
         return [(part, 0) for part in split_to_width(draw, prefix + detail, used_font, max_width)]
 
     result: list[tuple[str, int]] = []
@@ -324,110 +339,78 @@ def draw_line(draw: ImageDraw.ImageDraw, xy: tuple[int, int], text: str, kind: s
     stroke_width = body_stroke_width if kind in ("body", "bullet", "definition-continuation", "numbered-continuation") else 0
     glyph_box = draw.textbbox((line_x, 0), visible_text(text), font=used_font, anchor="ls", stroke_width=stroke_width)
     glyph_height = glyph_box[3] - glyph_box[1]
-    baseline = y + (RULE_GAP + glyph_height) // 2
+    baseline = y + (RULE_GAP - glyph_height) // 2 - glyph_box[1]
     if kind.startswith("heading"):
         box = draw.textbbox((line_x, baseline), visible_text(text), font=used_font, anchor="ls")
-        draw.rounded_rectangle((line_x - 8 * RENDER_SCALE, box[1] + 8 * RENDER_SCALE, box[2] + 9 * RENDER_SCALE, box[3] - 2 * RENDER_SCALE), radius=8 * RENDER_SCALE, fill=HEADING_HIGHLIGHT)
+        draw_heading_highlight(draw, box, 8 * RENDER_SCALE, 9 * RENDER_SCALE)
     draw_marked_text(draw, (line_x, baseline), text, used_font, ink, stroke_width)
     return RULE_GAP * (2 if kind == "heading1" else 1)
 
 
+def draw_heading_highlight(draw: ImageDraw.ImageDraw, box: tuple[int, int, int, int], left_pad: int, right_pad: int) -> None:
+    height = box[3] - box[1]
+    if height <= 0:
+        return
+    top = box[1] + min(left_pad, height // 3)
+    bottom = box[3] - min(2 * RENDER_SCALE, height // 5)
+    draw.rounded_rectangle((box[0] - left_pad, top, box[2] + right_pad, bottom), radius=left_pad, fill=HEADING_HIGHLIGHT)
+
+
+def fit_header_text(draw: ImageDraw.ImageDraw, title: str, font: ImageFont.FreeTypeFont, width: int) -> tuple[str, ImageFont.FreeTypeFont]:
+    title = " ".join(title.splitlines())
+    for size in range(font.size, 23, -1):
+        fitted_font = font.font_variant(size=size)
+        if draw.textbbox((0, 0), title, font=fitted_font)[2] <= width:
+            return title, fitted_font
+    fitted_font = font.font_variant(size=24)
+    suffix = "…"
+    low, high = 0, len(title)
+    while low < high:
+        mid = (low + high + 1) // 2
+        if draw.textbbox((0, 0), title[:mid] + suffix, font=fitted_font)[2] <= width:
+            low = mid
+        else:
+            high = mid - 1
+    return title[:low] + suffix, fitted_font
+
+
 def draw_slide_chrome(page: Image.Image, title: str, page_number: int, page_count: int, heading_font: ImageFont.FreeTypeFont) -> None:
     draw = ImageDraw.Draw(page)
-    draw.text((120 * RENDER_SCALE, 43 * RENDER_SCALE), title, font=heading_font, fill="#FFFFFF", anchor="lm")
-    draw.text((PAGE_WIDTH - 110 * RENDER_SCALE, 43 * RENDER_SCALE), f"{page_number} / {page_count}", font=heading_font, fill="#FFFFFF", anchor="rm")
+    counter = f"{page_number} / {page_count}"
+    title_width = PAGE_WIDTH - 230 * RENDER_SCALE - round(draw.textlength(counter, font=heading_font)) - 30 * RENDER_SCALE
+    original_title = " ".join(title.splitlines())
+    title, title_font = fit_header_text(draw, title, heading_font, title_width)
+    if title != original_title and page_number == 1:
+        print("warning: Slide title shortened to fit the header. The full title is preserved in PDF metadata.", file=sys.stderr)
+    draw.text((120 * RENDER_SCALE, 43 * RENDER_SCALE), title, font=title_font, fill="#FFFFFF", anchor="lm")
+    draw.text((PAGE_WIDTH - 110 * RENDER_SCALE, 43 * RENDER_SCALE), counter, font=heading_font, fill="#FFFFFF", anchor="rm")
 
 
-def line_height(kind: str) -> int:
-    return RULE_GAP * (2 if kind == "heading1" else 1)
+def line_height(kind: str, rule_gap: int | None = None) -> int:
+    return (RULE_GAP if rule_gap is None else rule_gap) * (2 if kind == "heading1" else 1)
 
 
 def is_major_numbered_item(text: str) -> bool:
     return bool(re.match(r"^\s*\d+\)\s+", visible_text(text)))
 
 
-def collect_slide_sections(text: str) -> tuple[str, str, list[list[str]]]:
-    chapter, topic, current, sections = "", "", None, []
-    for raw in text.splitlines():
-        kind, content = classify_line(raw)
-        if kind == "blank":
-            continue
-        if kind == "heading1":
-            chapter = content
-            continue
-        if kind == "heading2":
-            topic = content
-            continue
-        if is_major_numbered_item(content):
-            if current:
-                sections.append(current)
-            current = [content]
-        elif current is not None:
-            current.append(content)
-    if current:
-        sections.append(current)
-    return chapter, topic, sections
-
-
-def card_text_lines(draw: ImageDraw.ImageDraw, section: list[str], body: ImageFont.FreeTypeFont, heading: ImageFont.FreeTypeFont, width: int) -> tuple[list[str], list[str]]:
-    title = split_to_width(draw, section[0].lstrip(), heading, width)
-    body_lines: list[str] = []
-    for source in section[1:]:
-        body_lines.extend(split_to_width(draw, source, body, width))
-    return title, body_lines
-
-
-def render_card_slide(text: str, font_path: Path, ink: str, slide_title: str) -> Image.Image:
-    page = paper_page("plain")
-    draw = ImageDraw.Draw(page)
-    heading_path = heading_font_path(font_path)
-    chapter, topic, sections = collect_slide_sections(text)
-    if not sections:
-        sections = [[slide_title or "수업 자료"]]
-    columns = 1 if len(sections) == 1 else 2
-    rows = ceil(len(sections) / columns)
-    outer_left, outer_right = 96 * RENDER_SCALE, 96 * RENDER_SCALE
-    grid_top, grid_bottom, gap = 118 * RENDER_SCALE, 62 * RENDER_SCALE, 28 * RENDER_SCALE
-    grid_width = PAGE_WIDTH - outer_left - outer_right
-    card_width = (grid_width - gap * (columns - 1)) // columns
-    card_height = (PAGE_HEIGHT - grid_top - grid_bottom - gap * (rows - 1)) // rows
-    padding = 30 * RENDER_SCALE
-    inner_width = card_width - padding * 2
-    selected: tuple[ImageFont.FreeTypeFont, ImageFont.FreeTypeFont, int, int] | None = None
-    for body_size in (48, 44, 40, 36, 32, 28):
-        body, heading = load_font(font_path, body_size), load_font(heading_path, body_size + 14)
-        body_step, heading_step = round(body_size * 1.28), round((body_size + 14) * 1.18)
-        fits = True
-        for section in sections:
-            title_lines, body_lines = card_text_lines(draw, section, body, heading, inner_width)
-            required = padding * 2 + len(title_lines) * heading_step + 14 * RENDER_SCALE + len(body_lines) * body_step
-            if required > card_height:
-                fits = False
-                break
-        if fits:
-            selected = body, heading, body_step, heading_step
+def keep_with_next_height(lines: list[tuple[str, str, int]], index: int, rule_gap: int) -> int:
+    kind, text, _ = lines[index]
+    needed = line_height(kind, rule_gap)
+    if not (kind.startswith("heading") or is_major_numbered_item(text)):
+        return needed
+    # Keep heading chains and intervening blank rows with the first content
+    # line. Oversized groups may still flow across pages in the caller.
+    for next_index in range(index + 1, len(lines)):
+        next_kind, next_text, _ = lines[next_index]
+        needed += line_height(next_kind, rule_gap)
+        if next_kind != "blank" and not next_kind.startswith("heading"):
+            if kind.startswith("heading") and is_major_numbered_item(next_text):
+                # The first numbered section must retain its own first child;
+                # otherwise the heading could stay behind when that section moves.
+                needed += keep_with_next_height(lines, next_index, rule_gap) - line_height(next_kind, rule_gap)
             break
-    if selected is None:
-        selected = load_font(font_path, 28), load_font(heading_path, 42), 36, 50
-    body, heading, body_step, heading_step = selected
-    header_text = " · ".join(part for part in (visible_text(chapter), visible_text(topic)) if part) or slide_title or "수업 자료"
-    draw_slide_chrome(page, header_text, 1, 1, load_font(heading_path, 42))
-    for index, section in enumerate(sections):
-        row, column = divmod(index, columns)
-        left = outer_left + column * (card_width + gap)
-        top = grid_top + row * (card_height + gap)
-        right, bottom = left + card_width, top + card_height
-        draw.rounded_rectangle((left, top, right, bottom), radius=18 * RENDER_SCALE, fill="#FFFDF6", outline="#D9CEE8", width=2 * RENDER_SCALE)
-        title_lines, body_lines = card_text_lines(draw, section, body, heading, inner_width)
-        cursor_y = top + padding
-        for line in title_lines:
-            draw.text((left + padding, cursor_y), visible_text(line), font=heading, fill=SLIDE_HEADER)
-            cursor_y += heading_step
-        cursor_y += 14 * RENDER_SCALE
-        for line in body_lines:
-            draw_marked_text(draw, (left + padding, cursor_y + body.size), line, body, ink, 0)
-            cursor_y += body_step
-    return page
+    return needed
 
 
 def draw_note_panel(draw: ImageDraw.ImageDraw, left: int, top: int, right: int, bottom: int, rule_gap: int) -> tuple[int, int, int]:
@@ -446,10 +429,10 @@ def draw_spread_line(draw: ImageDraw.ImageDraw, x: int, y: int, text: str, kind:
     used_font = h1 if kind == "heading1" else h2 if kind == "heading2" else body
     line_x = x + indent
     glyph_box = draw.textbbox((line_x, 0), visible_text(text), font=used_font, anchor="ls")
-    baseline = y + (rule_gap + glyph_box[3] - glyph_box[1]) // 2
+    baseline = y + (rule_gap - (glyph_box[3] - glyph_box[1])) // 2 - glyph_box[1]
     if kind.startswith("heading"):
         box = draw.textbbox((line_x, baseline), visible_text(text), font=used_font, anchor="ls")
-        draw.rounded_rectangle((line_x - 6 * RENDER_SCALE, box[1] + 6 * RENDER_SCALE, box[2] + 7 * RENDER_SCALE, box[3] - 2 * RENDER_SCALE), radius=6 * RENDER_SCALE, fill=HEADING_HIGHLIGHT)
+        draw_heading_highlight(draw, box, 6 * RENDER_SCALE, 7 * RENDER_SCALE)
     draw_marked_text(draw, (line_x, baseline), text, used_font, ink, 0)
     return rule_gap * (2 if kind == "heading1" else 1)
 
@@ -459,13 +442,15 @@ def divide_across_panels(lines: list[tuple[str, str, int]], panel_height: int, r
     index = 0
     for _ in range(2):
         start, used = index, 0
+        if index == len(lines):
+            breaks.append((index, index))
+            continue
         while index < len(lines):
             kind, line, _ = lines[index]
-            needed = rule_gap * (2 if kind == "heading1" else 1)
-            if is_major_numbered_item(line) and index + 1 < len(lines) and used:
-                next_needed = rule_gap * (2 if lines[index + 1][0] == "heading1" else 1)
-                if used + needed + next_needed > panel_height:
-                    break
+            needed = line_height(kind, rule_gap)
+            group_height = keep_with_next_height(lines, index, rule_gap)
+            if used and group_height <= panel_height and used + group_height > panel_height:
+                break
             if used + needed > panel_height:
                 break
             used += needed
@@ -510,6 +495,10 @@ def render_single_slide(text: str, font_path: Path, ink: str, slide_title: str) 
 
 
 def render_pages(text: str, paper: str, font_path: Path, ink: str, slide: bool = False, single_slide: bool = False, slide_title: str = "") -> list[Image.Image]:
+    if not text.strip() or not visible_text(text).strip():
+        raise ValueError("Input text is empty.")
+    if single_slide and not slide:
+        raise ValueError("single_slide requires slide=True.")
     configure_canvas(slide)
     if slide and single_slide:
         return [render_single_slide(text, font_path, ink, slide_title)]
@@ -529,10 +518,9 @@ def render_pages(text: str, paper: str, font_path: Path, ink: str, slide: bool =
         while index < len(lines):
             kind, line, indent = lines[index]
             needed = line_height(kind)
-            if slide and is_major_numbered_item(line) and index + 1 < len(lines) and y > MARGIN_TOP:
-                next_kind = lines[index + 1][0]
-                if y + needed + line_height(next_kind) > max_y:
-                    break
+            group_height = keep_with_next_height(lines, index, RULE_GAP)
+            if y > MARGIN_TOP and group_height <= max_y - MARGIN_TOP and y + group_height > max_y:
+                break
             if y + needed > max_y:
                 break
             y += draw_line(draw, (MARGIN_LEFT, y), line, kind, indent, body, h1, h2, ink, body_stroke_width)
@@ -546,29 +534,67 @@ def render_pages(text: str, paper: str, font_path: Path, ink: str, slide: bool =
     return pages
 
 
+def existing_exports(output_dir: Path, stem: str) -> list[Path]:
+    if not output_dir.exists():
+        return []
+    pattern = re.compile(re.escape(stem) + r"-page-\d+\.png$")
+    return sorted(path for path in output_dir.iterdir() if path.name == f"{stem}.pdf" or pattern.fullmatch(path.name))
+
+
+def check_output_conflicts(output_dir: Path, stem: str, overwrite: bool) -> list[Path]:
+    existing = existing_exports(output_dir, stem)
+    if existing and not overwrite:
+        raise FileExistsError(f"Exports already exist for '{stem}'. Choose another --name or pass --overwrite.")
+    if any(path.is_dir() for path in existing):
+        raise IsADirectoryError("An export filename is occupied by a directory.")
+    return existing
+
+
+def export_pages(pages: list[Image.Image], output_dir: Path, stem: str, title: str, pdf_only: bool, overwrite: bool) -> Path:
+    existing = check_output_conflicts(output_dir, stem, overwrite)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    pdf_path = output_dir / f"{stem}.pdf"
+    # Finish every encoder before replacing any existing output. Failed renders
+    # or encodes must leave the user's previous exports intact.
+    with tempfile.TemporaryDirectory(prefix=".make-note-", dir=output_dir) as staging_name:
+        staging = Path(staging_name)
+        pages[0].save(staging / pdf_path.name, "PDF", resolution=OUTPUT_DPI, save_all=True, append_images=pages[1:], title=title)
+        filenames = [pdf_path.name]
+        if not pdf_only:
+            for number, page in enumerate(pages, start=1):
+                filename = f"{stem}-page-{number:02d}.png"
+                page.save(staging / filename, "PNG", dpi=(OUTPUT_DPI, OUTPUT_DPI))
+                filenames.append(filename)
+        # Recheck after encoding in case another process wrote this stem.
+        existing = check_output_conflicts(output_dir, stem, overwrite)
+        for filename in filenames:
+            (staging / filename).replace(output_dir / filename)
+        for old_path in existing:
+            if old_path.name not in filenames:
+                old_path.unlink()
+    return pdf_path
+
+
 def main() -> int:
     args = parse_args()
-    text = args.text if args.text is not None else args.input.read_text(encoding="utf-8")
+    text = args.text if args.text is not None else args.input.expanduser().read_text(encoding="utf-8-sig")
     if not text.strip():
         raise ValueError("Input text is empty.")
     output_dir = args.output_dir.expanduser().resolve()
-    output_dir.mkdir(parents=True, exist_ok=True)
     stem = re.sub(r'[\\/:*?"<>|\s]+', "-", args.name).strip(".-") or "handwriting-note"
     font_path = find_font(args.font)
     source_lines = text.splitlines()
     first_content_index = next((index for index, line in enumerate(source_lines) if line.strip()), None)
     metadata_title = args.title
-    if first_content_index is not None:
-        kind, first_content = classify_line(source_lines[first_content_index])
-        if kind == "body" and not source_lines[first_content_index].startswith((" ", "\t", "\u00a0")):
-            metadata_title = metadata_title or first_content
-            text = "\n".join(source_lines[:first_content_index] + source_lines[first_content_index + 1:])
+    if args.first_line_title and first_content_index is not None:
+        _, first_content = classify_line(source_lines[first_content_index])
+        metadata_title = metadata_title or visible_text(first_content)
+        text = "\n".join(source_lines[:first_content_index] + source_lines[first_content_index + 1:])
+    if args.input and any(path.resolve() == args.input.expanduser().resolve() for path in existing_exports(output_dir, stem)):
+        raise ValueError("The input source cannot also be an export destination. Choose another --name or --output-dir.")
+    check_output_conflicts(output_dir, stem, args.overwrite)
     pages = render_pages(text, args.paper, font_path, args.ink_color, args.slide, args.single_slide, metadata_title or stem)
-    pdf_path = output_dir / f"{stem}.pdf"
-    pages[0].save(pdf_path, "PDF", resolution=OUTPUT_DPI, save_all=True, append_images=pages[1:], title=metadata_title or stem)
-    if not args.pdf_only:
-        for number, page in enumerate(pages, start=1):
-            page.save(output_dir / f"{stem}-page-{number:02d}.png", "PNG", dpi=(OUTPUT_DPI, OUTPUT_DPI))
+    pdf_path = export_pages(pages, output_dir, stem, metadata_title or stem, args.pdf_only, args.overwrite)
     print(f"font={font_path}\npdf={pdf_path}\npages={len(pages)}")
     return 0
 

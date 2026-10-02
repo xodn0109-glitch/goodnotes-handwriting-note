@@ -1,0 +1,33 @@
+name: Validate skill renderer
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  renderer:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python: '3.10'
+            pillow: 'Pillow==10.4.0'
+          - os: ubuntu-latest
+            python: '3.13'
+            pillow: 'Pillow>=10.4,<13'
+          - os: windows-latest
+            python: '3.13'
+            pillow: 'Pillow>=10.4,<13'
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - run: python -m pip install -r requirements.txt "${{ matrix.pillow }}"
+      - run: python -m unittest discover -s tests -v

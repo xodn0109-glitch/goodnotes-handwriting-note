@@ -1,4 +1,4 @@
 interface:
   display_name: "굿노트 필기노트"
-  short_description: "텍스트와 교과서 캡처를 굿노트용 손글씨 필기노트로 만듭니다"
-  default_prompt: "Use $goodnotes-handwriting-note to turn this text or textbook-page capture into a Goodnotes-ready study note."
+  short_description: "교과서 PDF·캡처로 학생용·교사용 요약노트를 생성된 노트 폴더에 저장합니다"
+  default_prompt: "Use $goodnotes-handwriting-note to make student and teacher summary PDFs from the selected local textbook or chat upload, and save them in the working folder’s 생성된 노트 subfolder."

@@ -3,13 +3,13 @@
   "snapshot_date": "2026-10-06",
   "scope": "사용자 로컬 코퍼스의 중학교 및 고등학교 성취기준만 포함",
   "source_directory": "/Users/geo/Documents/2022개정 교육과정",
-  "standards": 2309,
+  "standards": 2887,
   "school_levels": {
     "고등학교": 2173,
-    "중학교": 136
+    "중학교": 714
   },
   "excluded_elementary_standards": 73,
-  "source_index_sha256": "2ddeebf452e827677c4d199a17ac6824be6ecab02fe91820e32b7a092cb525e3",
+  "source_index_sha256": "b9c9b18a8e5a76a5435252cfd0368b6fb735e54d9584b820397dbba14b72b6c4",
   "files": [
     {
       "file": "00_총론_고시_부칙.md",
@@ -105,16 +105,79 @@
       "file": "18_중학교_도덕.md",
       "sha256": "e5ec1c21fe43072bac620b41e616a6e70cc9ca99a09d07e7133a2a5d40fbbbb6",
       "standards": 22
-    }
-  ],
-  "index_corrections": [
+    },
     {
-      "file": "02_사회과_도덕과.md",
-      "code": "[12여지04-02]",
-      "physical_line": 2193,
-      "reason": "해설 속 교차 참조 대신 실제 성취기준 문장으로 연결"
+      "file": "19_중학교_국어.md",
+      "sha256": "84766054478f3ec27308c69af8b67c48bd2778dab8773e41ccf56d729916014c",
+      "standards": 51
+    },
+    {
+      "file": "20_중학교_수학.md",
+      "sha256": "c7954a07298b51cbeb3fb6067ef09e84d99ef8316dbba66b0fed3f4d7a4a67e8",
+      "standards": 60
+    },
+    {
+      "file": "21_중학교_과학.md",
+      "sha256": "f6b9674b2d33c1a9cfbdef466ddb8334a24d3b65877ad237ca5a8aba5fa6d948",
+      "standards": 87
+    },
+    {
+      "file": "22_중학교_기술_가정.md",
+      "sha256": "54e60c803367ee69b614d39488fcd3dff69a5ab1f92c61281bfd89eb2c446e13",
+      "standards": 52
+    },
+    {
+      "file": "23_중학교_정보.md",
+      "sha256": "73c900f6318b8b7009302afcfdbf0c69c9f2657653529047df38b2383811d501",
+      "standards": 25
+    },
+    {
+      "file": "24_중학교_체육.md",
+      "sha256": "1e74005ec90af3d65e031a368cb7d624fe2ef431a24508f70f530b7021c825de",
+      "standards": 51
+    },
+    {
+      "file": "25_중학교_음악.md",
+      "sha256": "2499e22f7b555e026bd4dd63937216d15ce26cf742976ae1c9c25b1ca67e800b",
+      "standards": 13
+    },
+    {
+      "file": "26_중학교_미술.md",
+      "sha256": "b22f18753a14c7070e13e9fd515e1ef1a1735d63f381ce9091167ce89aaa88b7",
+      "standards": 13
+    },
+    {
+      "file": "27_중학교_영어.md",
+      "sha256": "5a926957b147deadc0a67c8588a32b40368b9eb0966a1b9613f08b77612b7ac8",
+      "standards": 21
+    },
+    {
+      "file": "28_중학교_한문.md",
+      "sha256": "33b3bbb3384044d1aa39b23a1457f961bd56698b054e1457d550af1cbba61b35",
+      "standards": 12
+    },
+    {
+      "file": "29_중학교_환경.md",
+      "sha256": "c0f2b9fd095eda910bd2ac79255c80f7002caeb7b579ed94cc5ea3b75d19ccbe",
+      "standards": 19
+    },
+    {
+      "file": "30_중학교_생활외국어.md",
+      "sha256": "c94964d02190f381a64d34e9543cd194a19c44f5179e72fcec297ceae91b865d",
+      "standards": 134
+    },
+    {
+      "file": "31_중학교_보건.md",
+      "sha256": "93431d8210f7d8cd1f3ae5a5a58e2641b74648176723e905df8d00716850235e",
+      "standards": 26
+    },
+    {
+      "file": "32_중학교_진로와_직업.md",
+      "sha256": "e5b8789d1c835117c96139078091312d5f827c314e5bf8f51cb657c80462fb66",
+      "standards": 14
     }
   ],
+  "index_corrections": [],
   "known_source_issues": [
     {
       "file": "05_기술가정과.md",

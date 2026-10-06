@@ -1,0 +1,135 @@
+{
+  "curriculum": "2022 개정 교육과정",
+  "snapshot_date": "2026-10-06",
+  "scope": "사용자 로컬 코퍼스의 중학교 및 고등학교 성취기준만 포함",
+  "source_directory": "/Users/geo/Documents/2022개정 교육과정",
+  "standards": 2309,
+  "school_levels": {
+    "고등학교": 2173,
+    "중학교": 136
+  },
+  "excluded_elementary_standards": 73,
+  "source_index_sha256": "2ddeebf452e827677c4d199a17ac6824be6ecab02fe91820e32b7a092cb525e3",
+  "files": [
+    {
+      "file": "00_총론_고시_부칙.md",
+      "sha256": "1a5dfd4fa0c8d830c82e00c55a6ed10716be0f18b50fcdab45144eba4bdca2bc",
+      "standards": 0
+    },
+    {
+      "file": "01_국어과.md",
+      "sha256": "a121dd415ca8866c8eda03bcdd49adc3325a69a232e439107498a18e951e4321",
+      "standards": 119
+    },
+    {
+      "file": "02_사회과_도덕과.md",
+      "sha256": "360288d8c9029eb25ac669add3da87f2b697ebfac6de6fd3929967938e66ddb2",
+      "standards": 308
+    },
+    {
+      "file": "03_수학과.md",
+      "sha256": "0080e17dba1f4b3cbd0053b8e66c4737d0698a628eff7a676cf39c39f8b17ab5",
+      "standards": 254
+    },
+    {
+      "file": "04_과학과.md",
+      "sha256": "2b8cb4cc9fb6b0e05f7d091569b6550aa0d9204bc370b1046d9365078aa3cf9e",
+      "standards": 284
+    },
+    {
+      "file": "05_기술가정과.md",
+      "sha256": "7f99577a990ac0d0f8853ffe3305fe4ef08e8e2ecc67edcf6965d23c72441f32",
+      "standards": 124
+    },
+    {
+      "file": "06_정보과.md",
+      "sha256": "d949fd04d40691295e2f73fd3866645355c9d095d7045866b173dae339dee6a0",
+      "standards": 80
+    },
+    {
+      "file": "07_체육과.md",
+      "sha256": "432665576b5c1614b5b8ff12fab177340cdc4667ccf6bc9d7896a91b738ffc77",
+      "standards": 48
+    },
+    {
+      "file": "08_음악과.md",
+      "sha256": "b6116674ac42291bc7855c8bcb1621da431a4e160949c4dfbbabb6fad9140c6f",
+      "standards": 37
+    },
+    {
+      "file": "09_미술과.md",
+      "sha256": "a38d146cb0a6d7466969005d6987e8dc52aa31e34782c14681aa328ad0089b92",
+      "standards": 36
+    },
+    {
+      "file": "10_연극과.md",
+      "sha256": "1985c39a45d3974aa8b15a9929216440f8b2d3e1bcc1ff761eeeaf1472aed8ec",
+      "standards": 13
+    },
+    {
+      "file": "11_영어과.md",
+      "sha256": "1991a66b0664e71fc5409bdfb1b7ee966f98857dc72c0dafc23ee53a8712cac5",
+      "standards": 209
+    },
+    {
+      "file": "12_제2외국어과.md",
+      "sha256": "7005400c963d08a4b19460614d2e30adefe53935f8c6fa15cd77d6d17fa0b9e6",
+      "standards": 473
+    },
+    {
+      "file": "13_한문과.md",
+      "sha256": "d98cb38de469e402bf406c4423a0c3d7e0a2ef5fe20b6d05949e99369ccfb5fb",
+      "standards": 33
+    },
+    {
+      "file": "14_교양.md",
+      "sha256": "4ebdc869a17c243e1ad6d91a23fb999e4be03c22372727748ab40187ad683a5e",
+      "standards": 155
+    },
+    {
+      "file": "15_창의적_체험활동.md",
+      "sha256": "ed79d84862aff0c393cc483dc5bfa6b87c9c5c85b2d8b2d7979907e38bdf93cc",
+      "standards": 0
+    },
+    {
+      "file": "16_중학교_사회.md",
+      "sha256": "2d550b74b7d8e7964b9a3f8a74e88d5d8ba9f523a2ada48aa8f305c0fbe26662",
+      "standards": 74
+    },
+    {
+      "file": "17_중학교_역사.md",
+      "sha256": "c20c1aa05e0722c3b2e67c4bad0af3a2f7a8546221ae96fa3a0d98c4ef80e6e6",
+      "standards": 40
+    },
+    {
+      "file": "18_중학교_도덕.md",
+      "sha256": "e5ec1c21fe43072bac620b41e616a6e70cc9ca99a09d07e7133a2a5d40fbbbb6",
+      "standards": 22
+    }
+  ],
+  "index_corrections": [
+    {
+      "file": "02_사회과_도덕과.md",
+      "code": "[12여지04-02]",
+      "physical_line": 2193,
+      "reason": "해설 속 교차 참조 대신 실제 성취기준 문장으로 연결"
+    }
+  ],
+  "known_source_issues": [
+    {
+      "file": "05_기술가정과.md",
+      "code": "[12아동01-06]",
+      "reason": "원문 변환본에 U+FFFD 깨진 글자 포함"
+    },
+    {
+      "file": "11_영어과.md",
+      "code": "[10기영2-01-03]",
+      "reason": "원문 변환본에 U+FFFD 깨진 글자 포함"
+    },
+    {
+      "file": "03_수학과.md",
+      "code": "[12대수03-04]",
+      "reason": "원문 변환본에서 수학 기호 또는 대상 누락; 원본 확인 필요"
+    }
+  ]
+}

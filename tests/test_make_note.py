@@ -28,7 +28,7 @@ class NoteRenderingTests(unittest.TestCase):
         source = "Ⅱ 단원\n1. 주제\n 1) 개념\n  (1) 내용"
         pages = note.render_pages(source, "sample", self.font_path, "black", True, True)
         self.assertEqual(len(pages), 1)
-        self.assertEqual(pages[0].size, (3840, 2160))
+        self.assertEqual(pages[0].size, (7680, 4320))
         lines = [("body", "본문", 0)]
         self.assertEqual(note.divide_across_panels(lines, 100, 50), [(0, 1), (1, 1)])
 
@@ -153,6 +153,17 @@ class NoteExportTests(unittest.TestCase):
         call = self.run_main(["--text", "제목\n본문", "--first-line-title"])
         self.assertEqual(call.args[0], "본문")
         self.assertEqual(call.args[-1], "제목")
+
+    def test_teacher_cli_defaults_to_bold_font_and_png_export(self):
+        call = self.run_main(["--text", "교사용 본문", "--slide", "--single-slide"])
+        self.assertEqual(call.args[2], note.BUNDLED_BADASSEUGI_BOLD)
+        self.assertTrue((self.output / "note-page-01.png").is_file())
+
+    def test_paper_canvas_restores_student_resolution_after_slide(self):
+        note.configure_canvas(True)
+        note.configure_canvas(False)
+        self.assertEqual((note.PAGE_WIDTH, note.PAGE_HEIGHT), (2716, 3492))
+        self.assertEqual(note.RENDER_SCALE, 2)
 
     def test_consuming_title_only_input_does_not_export_blank_page(self):
         with self.assertRaisesRegex(ValueError, "empty"):

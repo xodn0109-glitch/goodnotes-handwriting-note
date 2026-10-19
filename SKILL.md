@@ -5,7 +5,7 @@ description: Create Goodnotes-ready study notes from local textbook PDFs, chat u
 
 # Goodnotes Handwriting Note
 
-Use `scripts/make_note.py` to render Korean text deterministically with bundled `학교안심 받아쓰기` fonts. The outputs are raster PDFs for import into Goodnotes, with companion PNGs when requested; they are not editable text or native pen strokes. Do not use image generation to render Korean body text.
+Use `scripts/make_note.py` to render Korean text deterministically with bundled `학교안심 받아쓰기` fonts. The outputs are raster PDFs for import into Goodnotes, with high-resolution teacher PNGs by default and student PNGs when requested; they are not editable text or native pen strokes. Do not use image generation to render Korean body text.
 
 ## Working-folder textbook workflow
 
@@ -13,11 +13,11 @@ When the user says “노트 만들어줘” for textbook material, accept eithe
 
 - Use the working folder explicitly selected by the user, otherwise the current project folder. Read the explicitly selected or newly uploaded source first. With no selected source, inspect the working folder for textbook PDFs, document originals, and captures; exclude `생성된 노트` and generated/temporary outputs. A single clear source can be used immediately. For a requested comparison across publishers, read [the multi-publisher workflow](references/multi-publisher-notes.md), confirm the user's primary textbook, and use the other supplied books to supplement its requested scope. Otherwise combine multiple files only when they clearly form the same requested unit; ask for the target only when the selection is ambiguous. Do not silently process every textbook in a folder.
 - Read or parse the source before drafting. For PDF originals and captures, preserve tables, symbols, headings, numbering, comparisons, and factual relationships; extracted text alone does not verify a figure or equation. An available Korean-document parser may help; otherwise use the available PDF/document/image-reading workflow. Keep originals intact.
-- Create `<working-folder>/생성된 노트/`. Deliver exactly two PDFs for each requested note set by default: `<단원위계>_<주제>-학생용.pdf` and `<단원위계>_<주제>-교사용.pdf` (see Titles and filenames). The student version contains short curriculum-aligned concept blanks; the teacher version shows all answers. Use one complete draft so that removing `[[...]]` markers from the student draft reproduces the teacher text exactly.
+- Create `<working-folder>/생성된 노트/`. Deliver two PDFs plus a high-resolution PNG for every teacher page by default: `<단원위계>_<주제>-학생용.pdf` and `<단원위계>_<주제>-교사용.pdf` (see Titles and filenames). The student version contains short curriculum-aligned concept blanks; the teacher version shows all answers. Use one complete draft so that removing `[[...]]` markers from the student draft reproduces the teacher text exactly.
 - Keep the source’s actual unit/subunit structure and meaningful learning sequence visible in both versions. In multi-publisher mode, the primary textbook supplies this structure; other supplied books may provide relevant missing concepts, explanations, and examples with their sources identified. Use matching achievement standards to check concepts, relationships, and learning actions. Curriculum area numbers do not replace publisher unit numbers, and a textbook sequence does not establish a standard’s official area. Do not impose curriculum content absent from all supplied sources.
-- Render both with `--pdf-only`. Keep working Markdown, mapping records, and QA images in a temporary workspace outside `생성된 노트`; they are not extra delivered files. Supply PNGs or editable sources only if requested. Student notes use the iPad lined-paper preset. Teacher notes retain the two-panel 16:9 class-display layout; if one slide cannot fit the complete draft readably, use multiple slide pages in the same teacher PDF.
+- Render the student version with `--pdf-only`. Render the teacher version with `--slide` and without `--pdf-only` so that its PDF and high-resolution PNG pages are exported together. Teacher PNGs are deliverables in `생성된 노트`, not temporary QA images; use `<teacher-stem>-page-01.png`, `-page-02.png`, and so on. Keep working Markdown, mapping records, and QA images in a temporary workspace outside `생성된 노트`. Supply student PNGs or editable sources only if requested. Student notes use the iPad lined-paper preset. Teacher notes retain the two-panel 16:9 class-display layout; if one slide cannot fit the complete draft readably, use multiple slide pages in the same teacher PDF.
 - Preserve existing note sets. If the user has not authorized replacement, select the same next free revision suffix for both files, such as `2-4-1_사회-불평등-현상-학생용_v2.pdf` and `2-4-1_사회-불평등-현상-교사용_v2.pdf`. Honor explicitly requested topic stems, filenames, formats, layout, or a different destination.
-- Inspect the saved PDFs and verify content parity before reporting completion. Return the two absolute PDF links and a brief note on the source/curriculum scope and any unresolved limitation.
+- Inspect the saved PDFs and verify content parity before reporting completion. Return the two absolute PDF links and the teacher PNG links and a brief note on the source/curriculum scope and any unresolved limitation.
 
 ## Choose the source mode
 
@@ -63,7 +63,7 @@ The renderer preserves the first body line by default. Use `--title` for metadat
 
 The default paper is 2716 × 3492 px at 400 DPI, sized for a 10-inch iPad, with warm off-white paper, a red margin, light gray rules at roughly 5.6 mm spacing, and an empty unruled top area. Body text is pure black `학교안심 받아쓰기` L at about 11.5 pt with a one-render-pixel stroke; headings use B. Fonts load relative to the skill directory and need no system installation. Let paper notes overflow to another page instead of shrinking text. `--paper grid` and `--paper plain` provide alternatives.
 
-Class-display notes use `--slide`; use `--single-slide` when the complete note fits readably on one page: a 1920 × 1080 canvas rendered at 2× resolution, with a persistent title bar and two lined panels. Content flows left to right at the largest supported size that fits. `--single-slide` requires `--slide`. If the complete draft exceeds the readable single-slide capacity, use `--slide` without `--single-slide` for multiple pages in the same teacher PDF. Report a fit limitation only if readable multi-page rendering also fails; any scope reduction requires the user’s direction. Do not silently delete content or shrink below the supported minimum.
+Class-display notes use `--slide`; use `--single-slide` when the complete note fits readably on one page: a 1920 × 1080 canvas rendered natively at 4× resolution (7680 × 4320 pixels per page), with bundled `학교안심 받아쓰기` B bold body text and pure black ink by default, with a persistent title bar and two lined panels. Content flows left to right at the largest supported size that fits. `--single-slide` requires `--slide`. If the complete draft exceeds the readable single-slide capacity, use `--slide` without `--single-slide` for multiple pages in the same teacher PDF. Report a fit limitation only if readable multi-page rendering also fails; any scope reduction requires the user’s direction. Do not silently delete content or shrink below the supported minimum.
 
 For numbered definitions with a colon, keep the start of the explanation on the same line and align wrapped lines immediately after the colon. For numbered items without a colon, align wrapped lines after the marker. These hanging indents apply to `1)`, `(1)`, `a.`, and `-`; an ordinary sentence containing a colon is not automatically a definition.
 
@@ -80,7 +80,7 @@ python3 -m venv .venv
 .venv/bin/python scripts/make_note.py --input /tmp/student-note.md \
   --pdf-only --output-dir '/path/to/노트 만들기/생성된 노트' --name '2-4-1_사회-불평등-현상-학생용'
 .venv/bin/python scripts/make_note.py --input /tmp/teacher-note.md \
-  --title '요약노트(교사용)' --slide --pdf-only \
+  --title '사회 불평등 현상' --slide --single-slide \
   --output-dir '/path/to/노트 만들기/생성된 노트' --name '2-4-1_사회-불평등-현상-교사용'
 
 # Render a supplied note; its first body line remains visible.
@@ -107,4 +107,4 @@ Use the available PDF skill's render-and-inspect workflow. If that skill is unav
 
 Check source fidelity, version parity, readable blanks, glyph support, hanging indents, margins, clipping, page breaks, and the complete two-panel slide. Fix layout failures before delivery; do not substitute or omit unsupported characters silently. Keep any unresolved text issue explicit.
 
-Report the two PDF paths for textbook note sets, paper/style choices, and any remaining verification or rendering limitation. Report PNG paths only when PNG delivery was requested. For requested handwriting styles, use an appropriate font or a supplied font file. For explicitly requested decorative raster assets, use an available image-generation tool, inspect the asset, and keep it clear of text; decoration is outside the renderer's built-in layout.
+Report the two PDF paths for textbook note sets, paper/style choices, and any remaining verification or rendering limitation. Always report teacher PNG paths and recommend inserting the original PNG instead of taking a screenshot. Report student PNG paths only when requested. For requested handwriting styles, use an appropriate font or a supplied font file. For explicitly requested decorative raster assets, use an available image-generation tool, inspect the asset, and keep it clear of text; decoration is outside the renderer's built-in layout.

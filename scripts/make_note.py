@@ -48,7 +48,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--paper", choices=("sample", "ruled", "grid", "plain"), default="sample")
     parser.add_argument("--ink-color", default="#000000")
     parser.add_argument("--font", type=Path, help="TTF/TTC/OTF font file; defaults to bundled Hakgyoansim Badasseugi.")
-    parser.add_argument("--slide", action="store_true", help="Render 16:9 class-display slides instead of Goodnotes paper.")
+    parser.add_argument("--slide", action="store_true", help="Render 7680x4320 class-display slides with bold text instead of Goodnotes paper.")
     parser.add_argument("--single-slide", action="store_true", help="Fit class-display content into one divided 16:9 slide.")
     parser.add_argument("--pdf-only", action="store_true", help="Skip individual PNG exports.")
     parser.add_argument("--overwrite", action="store_true", help="Replace existing exports with this exact filename stem.")
@@ -76,8 +76,9 @@ def load_font(path: Path, size: int) -> ImageFont.FreeTypeFont:
 
 def configure_canvas(slide: bool) -> None:
     """Switch between the fixed iPad paper and 16:9 class-display canvases."""
-    global PAGE_WIDTH, PAGE_HEIGHT, MARGIN_LEFT, MARGIN_RIGHT, MARGIN_TOP, MARGIN_BOTTOM, MARGIN_LINE_X, RULE_GAP, SLIDE_MODE
+    global PAGE_WIDTH, PAGE_HEIGHT, MARGIN_LEFT, MARGIN_RIGHT, MARGIN_TOP, MARGIN_BOTTOM, MARGIN_LINE_X, RULE_GAP, SLIDE_MODE, RENDER_SCALE
     SLIDE_MODE = slide
+    RENDER_SCALE = 4 if slide else 2
     if slide:
         PAGE_WIDTH, PAGE_HEIGHT = 1920 * RENDER_SCALE, 1080 * RENDER_SCALE
         MARGIN_LEFT, MARGIN_RIGHT = 120 * RENDER_SCALE, 110 * RENDER_SCALE
@@ -358,11 +359,12 @@ def draw_heading_highlight(draw: ImageDraw.ImageDraw, box: tuple[int, int, int, 
 
 def fit_header_text(draw: ImageDraw.ImageDraw, title: str, font: ImageFont.FreeTypeFont, width: int) -> tuple[str, ImageFont.FreeTypeFont]:
     title = " ".join(title.splitlines())
-    for size in range(font.size, 23, -1):
+    minimum = 12 * RENDER_SCALE
+    for size in range(font.size, minimum - 1, -1):
         fitted_font = font.font_variant(size=size)
         if draw.textbbox((0, 0), title, font=fitted_font)[2] <= width:
             return title, fitted_font
-    fitted_font = font.font_variant(size=24)
+    fitted_font = font.font_variant(size=minimum)
     suffix = "…"
     low, high = 0, len(title)
     while low < high:
@@ -473,8 +475,9 @@ def render_single_slide(text: str, font_path: Path, ink: str, slide_title: str) 
     content_width = left_panel[2] - left_panel[0] - 100 * RENDER_SCALE
     content_height = panel_bottom - panel_top - 44 * RENDER_SCALE
     selected: tuple[ImageFont.FreeTypeFont, ImageFont.FreeTypeFont, ImageFont.FreeTypeFont, int, list[tuple[str, str, int]], list[tuple[int, int]]] | None = None
-    for body_size in (58, 54, 50, 46, 42, 38):
-        body, h1, h2 = load_font(font_path, body_size), load_font(heading_path, body_size + 20), load_font(heading_path, body_size + 14)
+    for base_size in (58, 54, 50, 46, 42, 38):
+        body_size = base_size * RENDER_SCALE // 2
+        body, h1, h2 = load_font(font_path, body_size), load_font(heading_path, body_size + 10 * RENDER_SCALE), load_font(heading_path, body_size + 7 * RENDER_SCALE)
         rule_gap = round(body_size * 1.34)
         lines = layout_lines_for_width(text, draw, body, h1, h2, content_width)
         breaks = divide_across_panels(lines, content_height, rule_gap)
@@ -484,7 +487,7 @@ def render_single_slide(text: str, font_path: Path, ink: str, slide_title: str) 
     if selected is None:
         raise ValueError("The note is too dense for a two-page spread at the supported display size.")
     body, h1, h2, rule_gap, lines, breaks = selected
-    draw_slide_chrome(page, slide_title or "수업 자료", 1, 1, load_font(heading_path, 42))
+    draw_slide_chrome(page, slide_title or "수업 자료", 1, 1, load_font(heading_path, 21 * RENDER_SCALE))
     for panel, (start, end) in zip((left_panel, right_panel), breaks):
         content_x, y, content_bottom = draw_note_panel(draw, *panel, rule_gap)
         for kind, line, indent in lines[start:end]:
@@ -506,6 +509,8 @@ def render_pages(text: str, paper: str, font_path: Path, ink: str, slide: bool =
     prototype_draw = ImageDraw.Draw(prototype)
     heading_font = heading_font_path(font_path)
     body_size, h1_size, h2_size = (88, 110, 100) if slide else (64, 85, 78)
+    if slide:
+        body_size, h1_size, h2_size = (size * RENDER_SCALE // 2 for size in (body_size, h1_size, h2_size))
     body, h1, h2 = (load_font(font_path, body_size), load_font(heading_font, h1_size), load_font(heading_font, h2_size))
     body_stroke_width = 1 if font_path.resolve() == BUNDLED_BADASSEUGI_REGULAR.resolve() else 0
     lines = layout_lines(text, prototype_draw, body, h1, h2)
@@ -528,7 +533,7 @@ def render_pages(text: str, paper: str, font_path: Path, ink: str, slide: bool =
         pages.append(page)
         page_number += 1
     if slide:
-        chrome_font = load_font(heading_font, 42)
+        chrome_font = load_font(heading_font, 21 * RENDER_SCALE)
         for number, page in enumerate(pages, start=1):
             draw_slide_chrome(page, slide_title or "수업 자료", number, len(pages), chrome_font)
     return pages
@@ -558,12 +563,13 @@ def export_pages(pages: list[Image.Image], output_dir: Path, stem: str, title: s
     # or encodes must leave the user's previous exports intact.
     with tempfile.TemporaryDirectory(prefix=".make-note-", dir=output_dir) as staging_name:
         staging = Path(staging_name)
-        pages[0].save(staging / pdf_path.name, "PDF", resolution=OUTPUT_DPI, save_all=True, append_images=pages[1:], title=title)
+        dpi = OUTPUT_DPI * RENDER_SCALE // 2
+        pages[0].save(staging / pdf_path.name, "PDF", resolution=dpi, save_all=True, append_images=pages[1:], title=title, quality=100, subsampling=0)
         filenames = [pdf_path.name]
         if not pdf_only:
             for number, page in enumerate(pages, start=1):
                 filename = f"{stem}-page-{number:02d}.png"
-                page.save(staging / filename, "PNG", dpi=(OUTPUT_DPI, OUTPUT_DPI))
+                page.save(staging / filename, "PNG", dpi=(dpi, dpi))
                 filenames.append(filename)
         # Recheck after encoding in case another process wrote this stem.
         existing = check_output_conflicts(output_dir, stem, overwrite)
@@ -582,7 +588,7 @@ def main() -> int:
         raise ValueError("Input text is empty.")
     output_dir = args.output_dir.expanduser().resolve()
     stem = re.sub(r'[\\/:*?"<>|\s]+', "-", args.name).strip(".-") or "handwriting-note"
-    font_path = find_font(args.font)
+    font_path = find_font(args.font if args.font is not None else BUNDLED_BADASSEUGI_BOLD if args.slide else None)
     source_lines = text.splitlines()
     first_content_index = next((index for index, line in enumerate(source_lines) if line.strip()), None)
     metadata_title = args.title

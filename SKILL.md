@@ -13,10 +13,10 @@ When the user says “노트 만들어줘” for textbook material, accept eithe
 
 - Use the working folder explicitly selected by the user, otherwise the current project folder. Read the explicitly selected or newly uploaded source first. With no selected source, inspect the working folder for textbook PDFs, document originals, and captures; exclude `생성된 노트` and generated/temporary outputs. A single clear source can be used immediately. For a requested comparison across publishers, read [the multi-publisher workflow](references/multi-publisher-notes.md), confirm the user's primary textbook, and use the other supplied books to supplement its requested scope. Otherwise combine multiple files only when they clearly form the same requested unit; ask for the target only when the selection is ambiguous. Do not silently process every textbook in a folder.
 - Read or parse the source before drafting. For PDF originals and captures, preserve tables, symbols, headings, numbering, comparisons, and factual relationships; extracted text alone does not verify a figure or equation. An available Korean-document parser may help; otherwise use the available PDF/document/image-reading workflow. Keep originals intact.
-- Create `<working-folder>/생성된 노트/`. Deliver exactly two PDFs for each requested note set by default: `요약노트(학생용).pdf` and `요약노트(교사용).pdf`. The student version contains short curriculum-aligned concept blanks; the teacher version shows all answers. Use one complete draft so that removing `[[...]]` markers from the student draft reproduces the teacher text exactly.
+- Create `<working-folder>/생성된 노트/`. Deliver exactly two PDFs for each requested note set by default: `<단원위계>_<주제>-학생용.pdf` and `<단원위계>_<주제>-교사용.pdf` (see Titles and filenames). The student version contains short curriculum-aligned concept blanks; the teacher version shows all answers. Use one complete draft so that removing `[[...]]` markers from the student draft reproduces the teacher text exactly.
 - Keep the source’s actual unit/subunit structure and meaningful learning sequence visible in both versions. In multi-publisher mode, the primary textbook supplies this structure; other supplied books may provide relevant missing concepts, explanations, and examples with their sources identified. Use matching achievement standards to check concepts, relationships, and learning actions. Curriculum area numbers do not replace publisher unit numbers, and a textbook sequence does not establish a standard’s official area. Do not impose curriculum content absent from all supplied sources.
 - Render both with `--pdf-only`. Keep working Markdown, mapping records, and QA images in a temporary workspace outside `생성된 노트`; they are not extra delivered files. Supply PNGs or editable sources only if requested. Student notes use the iPad lined-paper preset. Teacher notes retain the two-panel 16:9 class-display layout; if one slide cannot fit the complete draft readably, use multiple slide pages in the same teacher PDF.
-- Preserve existing note sets. If the user has not authorized replacement, select the same next free revision suffix for both files, such as `요약노트(학생용)_v2.pdf` and `요약노트(교사용)_v2.pdf`. Honor explicitly requested topic stems, filenames, formats, layout, or a different destination.
+- Preserve existing note sets. If the user has not authorized replacement, select the same next free revision suffix for both files, such as `2-4-1_사회-불평등-현상-학생용_v2.pdf` and `2-4-1_사회-불평등-현상-교사용_v2.pdf`. Honor explicitly requested topic stems, filenames, formats, layout, or a different destination.
 - Inspect the saved PDFs and verify content parity before reporting completion. Return the two absolute PDF links and a brief note on the source/curriculum scope and any unresolved limitation.
 
 ## Choose the source mode
@@ -51,7 +51,9 @@ Use `[[target]]` in the review copy to hide a short, assessable concept while re
 
 ## Titles and filenames
 
-The working-folder workflow uses the two default filenames above. When a topic-based filename is explicitly requested and textbook notes have a known hierarchy, use `<대단원>-<주제>-<세부노트>_<제목>-<용도>`, for example `2-1-1_정의의-의미와-필요성-수업용` and `2-1-1_정의의-의미와-필요성-복습용`. Derive numbers from the supplied textbook scope and established note sequence. Curriculum areas help check scope but do not establish a publisher's lesson numbering. When the hierarchy is unknown or inapplicable, use a descriptive stem without invented numbers. Honor a requested filename.
+By default, name textbook outputs `<대단원>-<주제>-<세부주제>_<제목>-학생용.pdf` and the matching `-교사용.pdf`. Derive the numerical prefix from the actual textbook headings, not curriculum area numbers or the note's newly arranged internal numbering. For example, `Ⅱ. 사회 정의와 불평등` → `4. 다양한 불평등 현상` → `1. 사회 불평등 현상에는 어떤 것이 있을까` yields `2-4-1_사회-불평등-현상-학생용.pdf` and `2-4-1_사회-불평등-현상-교사용.pdf`. Use the same prefix and concise topic title for both versions. When only part of the hierarchy is known, use only verified levels; do not invent a third level or borrow one from curriculum numbering. When no hierarchy is known or applicable, use `<제목>-학생용.pdf` and `<제목>-교사용.pdf`. Honor explicitly requested filenames.
+
+Do not print source credits, textbook page references, or a bibliography in ordinary summary-note bodies, footers, or slide headers by default. Keep source locations and curriculum mappings in internal working records outside `생성된 노트`. Preserve meaningful years and units attached to statistics: removing a source credit must not make historical data appear current. Print citations only when the user asks for them. In multi-publisher mode, keep the short `보완` marker to identify supplementary content, with its detailed provenance in the working records.
 
 Pass the full stem with `--name`; PNG pages share that stem. Place revision labels after the use label. Keep existing outputs unless replacement is authorized; use a new stem for a new version or `--overwrite` for an authorized replacement. Overwriting replaces that export set and removes obsolete numbered PNG pages; with `--pdf-only`, it removes that stem's old companion PNGs as well.
 
@@ -76,10 +78,10 @@ python3 -m venv .venv
 
 # Textbook workflow: drafts live in a temporary workspace, outputs in the project.
 .venv/bin/python scripts/make_note.py --input /tmp/student-note.md \
-  --pdf-only --output-dir '/path/to/노트 만들기/생성된 노트' --name '요약노트(학생용)'
+  --pdf-only --output-dir '/path/to/노트 만들기/생성된 노트' --name '2-4-1_사회-불평등-현상-학생용'
 .venv/bin/python scripts/make_note.py --input /tmp/teacher-note.md \
   --title '요약노트(교사용)' --slide --pdf-only \
-  --output-dir '/path/to/노트 만들기/생성된 노트' --name '요약노트(교사용)'
+  --output-dir '/path/to/노트 만들기/생성된 노트' --name '2-4-1_사회-불평등-현상-교사용'
 
 # Render a supplied note; its first body line remains visible.
 .venv/bin/python scripts/make_note.py --input /path/to/source.md \
